@@ -1,0 +1,8 @@
+# Internal team page — never for public or search consumption.
+# Cloudflare Access is the real gate; these headers are defence in depth.
+/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), camera=(), microphone=()

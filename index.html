@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bayzat KSA — Win Wall</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+/* ============================================================
+   BAYZAT BRAND TOKENS  (Brand Guidelines v3.0)
+   Purple #9647FF is THE hero color · Charcoal #242424 dark bg
+   Cherry #CD2873 = badges/highlights ONLY, never on purple
+   Never Charcoal or Stone as a text color · Arial everywhere
+   ============================================================ */
+:root{
+  --purple:#9647FF; --purple-dark:#4A378B; --purple-deep:#2E1F5E;
+  --charcoal:#242424; --black:#000; --white:#fff; --cherry:#CD2873;
+  --g1:#C8C8C8; --g2:#9A9A9A; --g3:#727272; --g4:#4B4B4B;
+  --ok:#2FD07A;
+  --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--charcoal); color:var(--white);
+  overflow:hidden;
+}
+/* subtle brand texture — purple glow, never a gradient on shapes/text */
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(900px 520px at 12% -10%, rgba(150,71,255,.30), transparent 70%),
+    radial-gradient(760px 480px at 100% 110%, rgba(74,55,139,.34), transparent 72%);
+}
+h1,h2,h3,.up{text-transform:uppercase; font-weight:800; letter-spacing:.04em}
+
+/* ============================ SHELL ============================ */
+#shake{position:relative; z-index:1; height:100%; display:flex; flex-direction:column}
+.topbar{
+  display:flex; align-items:center; gap:var(--s3);
+  padding:14px var(--s5); border-bottom:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.28); flex:0 0 auto;
+}
+.brand{display:flex; align-items:center; gap:14px}
+.brand svg{display:block}
+.brand .title{font-size:19px; font-weight:800; text-transform:uppercase; letter-spacing:.10em}
+.brand .title b{color:var(--purple)}
+.live{
+  display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.10em; color:var(--g1);
+}
+.dot{width:9px; height:9px; border-radius:50%; background:var(--ok); animation:pulse 1.8s ease-in-out infinite}
+.dot.off{background:var(--g3); animation:none}
+@keyframes pulse{0%,100%{opacity:1; transform:scale(1)}50%{opacity:.35; transform:scale(.82)}}
+.spacer{flex:1}
+.tbtn{
+  font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  color:var(--white); background:transparent; border:2px solid rgba(255,255,255,.28);
+  padding:9px 16px; border-radius:10px; cursor:pointer;
+}
+.tbtn:hover{border-color:var(--purple); color:var(--purple)}
+.tbtn.primary{background:var(--purple); border-color:var(--purple)}
+.tbtn.primary:hover{background:#7A2EE6; border-color:#7A2EE6; color:var(--white)}
+.sync{font-size:11px; color:var(--g2); letter-spacing:.04em}
+
+main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; flex-direction:column; gap:var(--s3)}
+
+/* ============================ HERO ============================ */
+.hero{display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); flex:0 0 auto}
+.card{
+  position:relative; overflow:hidden;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+  border-radius:18px; padding:26px 30px;
+}
+.card.hot{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.42)}
+.klabel{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--g1)}
+.pct{font-size:86px; font-weight:800; line-height:.92; letter-spacing:-.02em; margin:10px 0 2px}
+.pct .sym{font-size:38px; margin-left:4px; color:var(--purple)}
+.pct.win{color:var(--ok)} .pct.mid{color:#FFC53D} .pct.low{color:var(--white)}
+.money{font-size:19px; font-weight:700; color:var(--white)}
+.money i{font-style:normal; color:var(--g2); font-weight:400}
+.bar{height:12px; border-radius:8px; background:rgba(255,255,255,.13); overflow:hidden; margin-top:16px}
+.bar>div{height:100%; border-radius:8px; background:var(--purple); width:0; transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar>div.win{background:var(--ok)} .bar>div.mid{background:#FFC53D}
+.sub{margin-top:10px; font-size:13px; color:var(--g1)}
+.shape{position:absolute; right:-16px; bottom:-18px; opacity:.10; pointer-events:none}
+
+/* ======================= SP + LEADERBOARD ======================= */
+.grid{display:grid; grid-template-columns:1fr 1fr 1.5fr; gap:var(--s3); flex:1; min-height:0}
+.sp{display:flex; flex-direction:column; justify-content:center}
+.sp .count{font-size:76px; font-weight:800; line-height:.9; letter-spacing:-.02em; color:var(--purple)}
+.sp.alt .count{color:var(--cherry)}          /* Cherry = highlight, on charcoal only */
+.sp .of{font-size:14px; color:var(--g1); margin-top:10px}
+.badge{
+  display:inline-block; align-self:flex-start; margin-bottom:12px;
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+  padding:5px 11px; border-radius:999px; background:var(--cherry); color:var(--white);
+}
+.badge.p{background:var(--purple)}
+
+/* ---------- Self-prospected panel (counts only, no targets) ---------- */
+.spx{display:flex; flex-direction:column; gap:var(--s3)}
+.spx-head{display:flex; align-items:center; gap:12px}
+.spx-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.spx-stats>div{background:rgba(0,0,0,.26); border-radius:12px; padding:14px 16px}
+.spx-stats .l{display:block; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g2)}
+.spx-stats b{display:block; font-size:38px; font-weight:800; letter-spacing:-.02em; line-height:1; margin-top:8px; color:var(--purple)}
+.spx-stats>div:nth-child(4) b{color:var(--cherry)}
+.spx-split{display:grid; grid-template-columns:1.15fr 1fr; gap:var(--s3); flex:1; min-height:0}
+.spx-sub{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g3); margin-bottom:10px}
+.spr{display:grid; grid-template-columns:74px 1fr 26px; align-items:center; gap:10px; margin-bottom:8px}
+.spr .n{font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.spr .b{height:8px; border-radius:5px; background:rgba(255,255,255,.10); overflow:hidden}
+.spr .b>div{height:100%; border-radius:5px; background:var(--purple); width:0; transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.spr .v{font-size:13px; font-weight:800; text-align:right}
+.spr.zero .n,.spr.zero .v{color:var(--g3)}
+.spark{display:flex; align-items:flex-end; gap:4px; height:96px; padding-top:20px}
+.spark div{flex:1; background:var(--purple-dark); border-radius:3px 3px 0 0; min-height:3px; position:relative}
+.spark div.today{background:var(--cherry)}
+.spark div span{position:absolute; top:-17px; left:0; right:0; text-align:center; font-size:10px; font-weight:800; color:var(--g1)}
+.spark-x{display:flex; justify-content:space-between; margin-top:7px; font-size:9px; color:var(--g3); letter-spacing:.06em}
+
+.board{display:flex; flex-direction:column; min-height:0}
+.board h3{font-size:12px; letter-spacing:.14em; color:var(--g1); margin-bottom:14px}
+.rows{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:9px}
+.row{display:grid; grid-template-columns:22px 1fr 96px; align-items:center; gap:12px}
+.row .rk{font-size:13px; font-weight:800; color:var(--g3); text-align:right}
+.row.top .rk{color:var(--purple)}
+.row .nm{font-size:14px; font-weight:700; margin-bottom:5px}
+.row .rb{height:9px; border-radius:6px; background:rgba(255,255,255,.11); overflow:hidden}
+.row .rb>div{height:100%; border-radius:6px; background:var(--purple-dark); width:0; transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.row.top .rb>div{background:var(--purple)}
+.row .vv{text-align:right; font-size:13px; font-weight:700}
+.row .vv small{display:block; font-size:11px; font-weight:400; color:var(--g2)}
+
+/* ============================ TICKER ============================ */
+.ticker{
+  flex:0 0 auto; border-top:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.30); padding:12px var(--s5);
+  display:flex; align-items:center; gap:18px; overflow:hidden;
+}
+.ticker .tag{
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+  color:var(--white); background:var(--purple); padding:5px 11px; border-radius:999px; white-space:nowrap;
+}
+.tick-wrap{flex:1; overflow:hidden; position:relative; height:20px}
+.tick{position:absolute; white-space:nowrap; font-size:14px; color:var(--g1); will-change:transform; animation:slide 46s linear infinite}
+.tick b{color:var(--white)} .tick span{color:var(--purple); margin:0 14px}
+@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ========================= GONG OVERLAY ========================= */
+#gong{
+  position:fixed; inset:0; z-index:60; display:none;
+  background:rgba(0,0,0,.90); backdrop-filter:blur(3px);
+  align-items:center; justify-content:center; padding:var(--s5);
+}
+#gong.on{display:flex}
+.gcard{
+  position:relative; overflow:hidden; text-align:center;
+  width:min(1080px,94vw); padding:56px 60px 52px;
+  background:var(--purple); border-radius:26px;
+  box-shadow:0 40px 130px rgba(150,71,255,.55);
+  animation:pop .55s cubic-bezier(.2,1.3,.35,1) both;
+}
+@keyframes pop{from{transform:scale(.72) rotate(-1.5deg); opacity:0}to{transform:scale(1) rotate(0); opacity:1}}
+.gkicker{font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.34em; color:var(--white); opacity:.95}
+.ghead{font-size:78px; font-weight:800; text-transform:uppercase; letter-spacing:-.02em; line-height:.94; margin:14px 0 8px; color:var(--white)}
+.gname{font-size:29px; font-weight:700; color:var(--white); margin-bottom:var(--s4); line-height:1.25}
+.gstats{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s2); margin-bottom:var(--s3)}
+.gstat{background:rgba(0,0,0,.30); border-radius:14px; padding:20px 16px}
+.gstat .l{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:rgba(255,255,255,.82)}
+.gstat .v{font-size:36px; font-weight:800; margin-top:8px; letter-spacing:-.02em; color:var(--white)}
+.gstat .v small{font-size:15px; font-weight:700}
+.gfoot{display:flex; justify-content:center; gap:var(--s5); padding-top:var(--s3); border-top:1px solid rgba(255,255,255,.28)}
+.gfoot div{text-align:center}
+.gfoot .l{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:rgba(255,255,255,.82)}
+.gfoot .v{font-size:34px; font-weight:800; margin-top:6px; color:var(--white)}
+.gshape{position:absolute; opacity:.16; pointer-events:none}
+
+/* ========================== SP TOAST ========================== */
+#sp-toast{
+  position:fixed; right:var(--s4); bottom:var(--s4); z-index:55; display:none;
+  width:400px; padding:24px 26px; border-radius:18px;
+  background:var(--charcoal); border:2px solid var(--cherry);
+  box-shadow:0 28px 80px rgba(0,0,0,.62);
+}
+#sp-toast.on{display:block; animation:slidein .5s cubic-bezier(.2,1.2,.3,1) both}
+@keyframes slidein{from{transform:translateX(120%) scale(.94); opacity:0}to{transform:translateX(0) scale(1); opacity:1}}
+#sp-toast .k{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.16em; color:var(--cherry)}
+#sp-toast .h{font-size:26px; font-weight:800; text-transform:uppercase; letter-spacing:-.01em; margin:8px 0 10px; color:var(--white)}
+#sp-toast .n{font-size:15px; font-weight:700; color:var(--white); line-height:1.3}
+#sp-toast .m{font-size:13px; color:var(--g1); margin-top:8px}
+#sp-toast .c{display:flex; gap:var(--s3); margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,.16)}
+#sp-toast .c div{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:var(--g1)}
+#sp-toast .c b{display:block; font-size:24px; letter-spacing:-.01em; color:var(--white); margin-top:4px}
+
+/* =========================== ARM GATE =========================== */
+#arm{
+  position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.94); text-align:center; padding:var(--s5);
+}
+#arm.off{display:none}
+#arm .box{max-width:660px}
+#arm h1{font-size:62px; line-height:.96; letter-spacing:-.02em; margin:var(--s3) 0 var(--s2)}
+#arm h1 em{font-style:normal; color:var(--purple)}
+#arm p{font-size:17px; color:var(--g1); line-height:1.55; margin-bottom:var(--s5)}
+#arm button{
+  font-family:inherit; font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.14em;
+  color:var(--white); background:var(--purple); border:none; border-radius:12px;
+  padding:20px 46px; cursor:pointer;
+}
+#arm button:hover{background:#7A2EE6}
+#arm .fine{margin-top:var(--s3); font-size:12px; color:var(--g3)}
+
+/* above the gong card (z 60) so the confetti actually reads */
+#confetti{position:fixed; inset:0; z-index:62; pointer-events:none; display:none}
+#confetti.on{display:block}
+
+/* ========================= VIEW TABS ========================= */
+.tabs{display:flex; gap:6px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:4px}
+.tab{
+  font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+  color:var(--g1); background:transparent; border:none; padding:9px 18px; border-radius:999px; cursor:pointer;
+}
+.tab.active{background:var(--purple); color:var(--white)}
+main[hidden]{display:none !important}
+#view-fame{overflow-y:auto; overflow-x:hidden}
+#view-fame::-webkit-scrollbar{width:9px}
+#view-fame::-webkit-scrollbar-thumb{background:rgba(150,71,255,.5); border-radius:9px}
+
+.sec-head{display:flex; align-items:baseline; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s2)}
+.sec-head h2{font-size:17px; letter-spacing:.12em}
+.sec-head .note{font-size:12px; color:var(--g2)}
+.seg{display:flex; gap:4px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:3px; margin-left:auto}
+.seg button{
+  font-family:inherit; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  color:var(--g1); background:transparent; border:none; padding:7px 14px; border-radius:999px; cursor:pointer;
+}
+.seg button.active{background:var(--purple); color:var(--white)}
+
+/* ========================= LEADERBOARD ========================= */
+.lb{display:flex; flex-direction:column; gap:10px}
+.lb-row{
+  display:grid; grid-template-columns:56px 1.5fr 1fr 1fr 1fr 1fr; align-items:center; gap:var(--s2);
+  padding:16px 20px; border-radius:14px;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10);
+}
+.lb-row.r1{background:rgba(150,71,255,.16); border-color:rgba(150,71,255,.5)}
+.lb-row.r2{background:rgba(255,255,255,.075)}
+.lb-row.r3{background:rgba(255,255,255,.06)}
+.lb-row .medal{font-size:26px; font-weight:800; text-align:center; letter-spacing:-.02em; color:var(--g3)}
+.lb-row.r1 .medal{color:var(--purple)} .lb-row.r2 .medal{color:var(--g1)} .lb-row.r3 .medal{color:var(--cherry)}
+.lb-row .who{display:flex; align-items:center; gap:12px}
+.lb-row .who .nm{font-size:19px; font-weight:800; text-transform:uppercase; letter-spacing:.02em}
+.lb-row .who .tp{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; padding:3px 8px; border-radius:999px; background:rgba(255,255,255,.14); color:var(--g1)}
+.cell .l{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g2)}
+.cell .v{font-size:20px; font-weight:800; letter-spacing:-.01em; margin-top:3px}
+.cell .v.pu{color:var(--purple)} .cell .v.ok{color:var(--ok)} .cell .v.md{color:#FFC53D}
+.lb-head{display:grid; grid-template-columns:56px 1.5fr 1fr 1fr 1fr 1fr; gap:var(--s2); padding:0 20px 6px}
+.lb-head div{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--g3)}
+.pts{display:flex; align-items:baseline; gap:6px}
+.pts b{font-size:26px; font-weight:800; color:var(--purple); letter-spacing:-.02em}
+.pts i{font-style:normal; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:var(--g2)}
+
+/* ========================== BADGES ========================== */
+.badges{display:grid; grid-template-columns:repeat(auto-fill,minmax(292px,1fr)); gap:var(--s2)}
+.bg{
+  position:relative; overflow:hidden; border-radius:18px; padding:22px 24px 20px;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+}
+.bg.won{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.40)}
+.bg .medal-shape{position:absolute; right:-22px; top:-22px; opacity:.13; pointer-events:none}
+.bg .bt{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--white)}
+.bg .bd{font-size:11px; color:var(--g2); margin-top:4px; line-height:1.4; min-height:31px}
+.bg .bv{font-size:38px; font-weight:800; letter-spacing:-.02em; margin:14px 0 2px; color:var(--purple)}
+.bg.cherry .bv{color:var(--cherry)}
+.bg .bh{display:flex; align-items:center; gap:9px; font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--white)}
+.bg .bh .crown{font-size:16px}
+.bg .bw{font-size:11px; color:var(--g2); margin-top:6px}
+.bg .empty{font-size:13px; color:var(--g3); font-style:italic; margin-top:14px}
+
+/* record tables inside a badge card */
+.recs{margin-top:14px; display:flex; flex-direction:column; gap:7px}
+.rec{display:grid; grid-template-columns:64px 1fr auto; align-items:center; gap:10px; font-size:12px}
+.rec .rp{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g3)}
+.rec .rh{font-weight:700; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.rec .rv{font-weight:800; color:var(--purple); font-size:15px}
+.rec.cherry .rv{color:var(--cherry)}
+.rec .rw{display:block; font-size:10px; font-weight:400; color:var(--g3)}
+
+.fame-sec{margin-bottom:var(--s5)}
+
+/* ===================== REAL TROPHIES ===================== */
+.trophies{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:var(--s2)}
+.tr{
+  position:relative; border-radius:18px; padding:24px 22px 20px; text-align:center;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+}
+.tr.held{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.42)}
+.tr.held.elite{background:rgba(205,40,115,.13); border-color:rgba(205,40,115,.45)}
+.tr .cup{height:104px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:14px}
+.tr .cup svg{filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+.tr .tn{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.08em}
+.tr .td{font-size:11px; color:var(--g2); margin-top:5px; line-height:1.4; min-height:30px}
+.tr .tv{font-size:30px; font-weight:800; letter-spacing:-.02em; margin:12px 0 4px; color:var(--purple)}
+.tr.elite .tv{color:var(--cherry)}
+.tr .th{font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.04em}
+.tr .tw{font-size:10px; color:var(--g3); margin-top:6px; line-height:1.35}
+.tr .vacant{font-size:12px; color:var(--g3); font-style:italic; margin-top:12px}
+.ribbon{
+  position:absolute; top:14px; right:14px;
+  font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+  padding:4px 9px; border-radius:999px; background:var(--purple); color:var(--white);
+}
+.ribbon.elite{background:var(--cherry)}
+.ribbon.open{background:rgba(255,255,255,.14); color:var(--g1)}
+
+/* ===================== ACHIEVEMENTS ===================== */
+.who-pick{display:flex; gap:6px; flex-wrap:wrap; margin-left:auto}
+.chip{
+  font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  color:var(--g1); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+  padding:8px 14px; border-radius:999px; cursor:pointer;
+}
+.chip:hover{border-color:var(--purple); color:var(--white)}
+.chip.active{background:var(--purple); border-color:var(--purple); color:var(--white)}
+
+.ach-summary{
+  display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  background:rgba(150,71,255,.10); border:1px solid rgba(150,71,255,.30);
+  border-radius:14px; padding:16px 20px; margin-bottom:var(--s2);
+}
+.ach-summary .big{font-size:34px; font-weight:800; letter-spacing:-.02em; color:var(--purple)}
+.ach-summary .big i{font-style:normal; font-size:16px; color:var(--g2)}
+.ach-summary .lbl{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g1)}
+.ach-summary .track{flex:1; min-width:180px; height:10px; border-radius:6px; background:rgba(255,255,255,.13); overflow:hidden}
+.ach-summary .track>div{height:100%; border-radius:6px; background:var(--purple); transition:width .8s cubic-bezier(.2,.8,.2,1)}
+
+.achs{display:grid; grid-template-columns:repeat(auto-fill,minmax(214px,1fr)); gap:14px}
+.ach{
+  position:relative; border-radius:16px; padding:18px 16px 16px; text-align:center;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10);
+}
+.ach.on{background:rgba(150,71,255,.14); border-color:rgba(150,71,255,.45)}
+.ach.on.elite{background:rgba(205,40,115,.14); border-color:rgba(205,40,115,.45)}
+.ach.off{opacity:.62}
+.ach .medal-cup{height:74px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:10px; position:relative}
+.ach .lock{
+  position:absolute; right:calc(50% - 40px); bottom:2px;
+  width:24px; height:24px; border-radius:50%;
+  background:var(--charcoal); border:1px solid rgba(255,255,255,.22);
+  display:flex; align-items:center; justify-content:center;
+}
+.ach .lock svg{width:11px; height:11px}
+.ach .an{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; line-height:1.25}
+.ach .ad{font-size:10px; color:var(--g2); margin-top:5px; line-height:1.4; min-height:28px}
+.ach .prog{height:7px; border-radius:5px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:12px}
+.ach .prog>div{height:100%; border-radius:5px; background:var(--purple); transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.ach.on .prog>div{background:var(--ok)}
+.ach .pv{font-size:10px; font-weight:800; letter-spacing:.06em; margin-top:7px; color:var(--g1)}
+.ach.on .pv{color:var(--ok)}
+.ach .tierpill{
+  position:absolute; top:10px; left:10px;
+  font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  padding:3px 7px; border-radius:999px; background:rgba(255,255,255,.12); color:var(--g1);
+}
+.ach.on .tierpill{background:var(--purple); color:var(--white)}
+.ach.on.elite .tierpill{background:var(--cherry)}
+
+.shaking{animation:shake .62s cubic-bezier(.36,.07,.19,.97) 3}
+@keyframes shake{
+  10%,90%{transform:translate3d(-2px,1px,0) rotate(-.22deg)}
+  20%,80%{transform:translate3d(5px,-3px,0) rotate(.38deg)}
+  30%,50%,70%{transform:translate3d(-11px,4px,0) rotate(-.55deg)}
+  40%,60%{transform:translate3d(11px,-4px,0) rotate(.55deg)}
+}
+/* Below the TV/desktop sweet spot: stop forcing everything into one screen —
+   let the view scroll and cards size to their content instead of clipping. */
+@media (max-width:1180px), (max-height:780px){
+  #view-wall{overflow-y:auto}
+  .hero{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr 1fr; flex:none}
+  .board{grid-column:1/-1}
+  .rows{overflow:visible}
+  .sp{min-height:200px}
+  .pct{font-size:64px}
+  .sp .count{font-size:58px}
+  .lb-row,.lb-head{grid-template-columns:44px 1.2fr 1fr 1fr 1fr}
+  .lb-row .cell:nth-child(4),.lb-head div:nth-child(4){display:none} /* drop Deals first */
+}
+@media (max-width:760px){
+  .grid{grid-template-columns:1fr}
+  .topbar{flex-wrap:wrap; gap:var(--s2); padding:12px var(--s3)}
+  main{padding:var(--s3) var(--s3) var(--s2)}
+  .ticker{padding:10px var(--s3)}
+  .lb-row,.lb-head{grid-template-columns:36px 1fr 1fr 1fr}
+  .lb-row .cell:nth-child(5),.lb-head div:nth-child(5){display:none}
+}
+@media (max-width:820px){
+  .gcard{padding:36px 26px 32px}
+  .ghead{font-size:46px}
+  .gname{font-size:21px}
+  .gstat .v{font-size:24px; white-space:nowrap}
+  .gstat .v small{font-size:12px}
+  .gfoot{gap:var(--s3)} .gfoot .v{font-size:26px}
+  .badges{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="shake">
+  <nav class="topbar">
+    <div class="brand">
+      <!-- Bayzat monogram — white on charcoal, per logo rules -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63.943 86.528" width="24" fill="#fff" aria-label="Bayzat">
+        <path d="M 26.945 15.042 C 33.732 15.042 38.904 20.171 38.904 26.486 C 38.904 32.794 33.732 38.283 26.945 38.283 L 15.395 38.283 L 15.395 15.049 L 26.945 15.049 Z M 48.555 71.351 L 15.395 71.344 L 15.388 52.909 L 48.548 52.887 L 48.548 71.351 Z M 63.943 86.528 L 63.936 38.381 L 51.512 38.381 C 53.72 35.03 54.976 31.037 54.976 26.479 C 54.976 11.684 42.029 0 26.112 0 L 0 0 L 0 86.528 Z"/>
+      </svg>
+      <span class="title">KSA <b>Win Wall</b></span>
+    </div>
+    <div class="live"><span class="dot" id="dot"></span><span id="live-txt">Live</span></div>
+    <div class="tabs">
+      <button class="tab active" data-view="wall">Win Wall</button>
+      <button class="tab" data-view="fame">Hall of Fame</button>
+    </div>
+    <div class="spacer"></div>
+    <span class="sync" id="sync">—</span>
+    <button class="tbtn" id="test-gong">Test Gong</button>
+    <button class="tbtn" id="test-sp">Test Ringer</button>
+    <button class="tbtn primary" id="refresh">Refresh</button>
+  </nav>
+
+  <main id="view-wall">
+    <section class="hero">
+      <div class="card hot">
+        <div class="klabel" id="m-label">This Month · Attainment</div>
+        <div class="pct low" id="m-pct">—<span class="sym">%</span></div>
+        <div class="money" id="m-money">—</div>
+        <div class="bar"><div id="m-bar"></div></div>
+        <div class="sub" id="m-sub">—</div>
+        <!-- EMPOWERMENT shape (upward staircase) = progress, striving -->
+        <svg class="shape" viewBox="0 0 156.5 156.5" width="190" fill="#fff" aria-hidden="true">
+          <path d="M 117.351562 0 L 156.476562 0 L 156.476562 106.179688 L 117.351562 106.179688 L 117.351562 122.953125 L 78.234375 122.953125 L 78.234375 139.726562 L 39.109375 139.726562 L 39.109375 156.5 L 0 156.5 L 0 50.171875 L 39.109375 50.171875 L 39.109375 33.398438 L 78.234375 33.398438 L 78.234375 16.773438 L 117.351562 16.773438 Z"/>
+        </svg>
+      </div>
+      <div class="card">
+        <div class="klabel" id="q-label">This Quarter · Attainment</div>
+        <div class="pct low" id="q-pct">—<span class="sym">%</span></div>
+        <div class="money" id="q-money">—</div>
+        <div class="bar"><div id="q-bar"></div></div>
+        <div class="sub" id="q-sub">—</div>
+        <!-- DYNAMIC shape (zigzag) = momentum -->
+        <svg class="shape" viewBox="0 0 156.5 156.5" width="190" fill="#fff" aria-hidden="true">
+          <path d="M 131.152344 0 L 25.308594 0 L 0 26.058594 L 25.300781 52.148438 L 0 78.21875 L 25.300781 104.308594 L 0 130.382812 L 25.28125 156.46875 L 131.191406 156.46875 L 156.476562 130.375 L 131.191406 104.308594 L 156.476562 78.210938 L 131.191406 52.148438 L 156.476562 26.050781 Z"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card spx">
+        <div class="spx-head">
+          <span class="badge p">Self-Prospected</span>
+          <span class="klabel">Opps Created — Own Pipeline, Own Pace</span>
+        </div>
+        <div class="spx-stats">
+          <div><span class="l">Today</span><b id="sp-d">—</b></div>
+          <div><span class="l">This Week</span><b id="sp-w">—</b></div>
+          <div><span class="l">This Month</span><b id="sp-m">—</b></div>
+          <div><span class="l">This Quarter</span><b id="sp-q">—</b></div>
+        </div>
+        <div class="spx-split">
+          <div>
+            <div class="spx-sub" id="sp-reps-sub">Who's Prospecting — This Month</div>
+            <div id="sp-reps"></div>
+          </div>
+          <div>
+            <div class="spx-sub">Last 14 Days</div>
+            <div class="spark" id="sp-spark"></div>
+            <div class="spark-x" id="sp-spark-x"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card board">
+        <h3 id="board-title">Who's On The Board — This Month</h3>
+        <div class="rows" id="rows"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== HALL OF FAME ===================== -->
+  <main id="view-fame" hidden>
+    <section class="fame-sec">
+      <div class="sec-head">
+        <h2>The Leadership Board</h2>
+        <span class="note" id="lb-note">Hustle Points = SAR 1K won · 25 per self-prospected opp · 50 per deal closed · 250 bonus for hitting target</span>
+        <div class="seg" id="lb-seg">
+          <button data-p="month" class="active">Month</button>
+          <button data-p="quarter">Quarter</button>
+          <button data-p="year">Year</button>
+          <button data-p="all">All Time</button>
+        </div>
+      </div>
+      <div class="lb-head">
+        <div>#</div><div>Rep</div><div>Won</div><div>Deals</div><div>SP Opps</div><div>Hustle Points</div>
+      </div>
+      <div class="lb" id="lb"></div>
+    </section>
+
+    <section class="fame-sec">
+      <div class="sec-head">
+        <h2>The Trophy Cabinet</h2>
+        <span class="note" id="bg-note">Records held right now — take one off someone.</span>
+        <div class="seg" id="bg-seg">
+          <button data-p="month">Month</button>
+          <button data-p="quarter" class="active">Quarter</button>
+          <button data-p="year">Year</button>
+          <button data-p="all">All Time</button>
+        </div>
+      </div>
+      <div class="trophies" id="trophies"></div>
+    </section>
+
+    <section class="fame-sec">
+      <div class="sec-head">
+        <h2>Achievements</h2>
+        <span class="note">Unlock them once — they're yours. Locked ones show how close you are.</span>
+        <div class="who-pick" id="ach-pick"></div>
+      </div>
+      <div class="ach-summary">
+        <div>
+          <div class="lbl" id="ach-who">—</div>
+          <div class="big"><span id="ach-n">—</span><i> / <span id="ach-t">—</span> unlocked</i></div>
+        </div>
+        <div class="track"><div id="ach-track" style="width:0"></div></div>
+        <div class="lbl" id="ach-next">—</div>
+      </div>
+      <div class="achs" id="achs"></div>
+    </section>
+
+    <section class="fame-sec">
+      <div class="sec-head">
+        <h2>All-Time Record Boards</h2>
+        <span class="note">Best single day, week, month, quarter and year anyone has posted.</span>
+      </div>
+      <div class="badges" id="badges"></div>
+    </section>
+  </main>
+
+  <div class="ticker">
+    <span class="tag">Latest Wins</span>
+    <div class="tick-wrap"><div class="tick" id="tick">Waiting for data…</div></div>
+  </div>
+</div>
+
+<!-- ===================== GONG OVERLAY ===================== -->
+<div id="gong">
+  <div class="gcard">
+    <!-- NO-BRAINER starburst = the eureka/celebration moment -->
+    <svg class="gshape" style="left:-40px; top:-40px" viewBox="0 0 156.5 156.5" width="210" fill="#fff" aria-hidden="true">
+      <path d="M 66.757812 0.0078125 L 58.308594 0 L 56.894531 34.535156 L 27.097656 0 L 22.957031 0 L 36.378906 48.949219 L 0.0078125 35.792969 L 0.0078125 41.003906 L 31.058594 82.726562 L 0.0390625 81.890625 L 0.046875 95.203125 L 29.105469 114.222656 L 0.015625 122.640625 L 0 156.46875 L 156.46875 156.46875 L 156.46875 122.640625 L 127.28125 114.328125 L 156.476562 95.195312 L 156.46875 81.882812 L 125.328125 82.789062 L 156.46875 40.96875 L 156.46875 35.753906 L 119.980469 49.007812 L 133.355469 0.0507812 L 129.222656 0.0507812 L 99.457031 34.574219 L 97.996094 0.0390625 L 89.550781 0.0390625 L 78.175781 28.542969 Z"/>
+    </svg>
+    <svg class="gshape" style="right:-46px; bottom:-46px" viewBox="0 0 156.5 156.5" width="230" fill="#fff" aria-hidden="true">
+      <path d="M 117.351562 0 L 156.476562 0 L 156.476562 106.179688 L 117.351562 106.179688 L 117.351562 122.953125 L 78.234375 122.953125 L 78.234375 139.726562 L 39.109375 139.726562 L 39.109375 156.5 L 0 156.5 L 0 50.171875 L 39.109375 50.171875 L 39.109375 33.398438 L 78.234375 33.398438 L 78.234375 16.773438 L 117.351562 16.773438 Z"/>
+    </svg>
+    <div class="gkicker" id="g-kicker">Deal Won</div>
+    <div class="ghead" id="g-head">Make it.</div>
+    <div class="gname" id="g-name">—</div>
+    <div class="gstats">
+      <div class="gstat"><div class="l">Deal Size</div><div class="v" id="g-amt">—</div></div>
+      <div class="gstat"><div class="l">Employees</div><div class="v" id="g-lives">—</div></div>
+      <div class="gstat"><div class="l">Closed By</div><div class="v" id="g-owner">—</div></div>
+    </div>
+    <div class="gfoot">
+      <div><div class="l">Month Attainment</div><div class="v" id="g-m">—</div></div>
+      <div><div class="l">Quarter Attainment</div><div class="v" id="g-q">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SP TOAST ===================== -->
+<div id="sp-toast">
+  <div class="k">Self-Prospected Opp</div>
+  <div class="h">New one in play.</div>
+  <div class="n" id="t-name">—</div>
+  <div class="m" id="t-meta">—</div>
+  <div class="c">
+    <div>This Month<b id="t-m">—</b></div>
+    <div>This Quarter<b id="t-q">—</b></div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<!-- ===================== ARM GATE ===================== -->
+<div id="arm">
+  <div class="box">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63.943 86.528" width="40" fill="#9647FF" aria-hidden="true">
+      <path d="M 26.945 15.042 C 33.732 15.042 38.904 20.171 38.904 26.486 C 38.904 32.794 33.732 38.283 26.945 38.283 L 15.395 38.283 L 15.395 15.049 L 26.945 15.049 Z M 48.555 71.351 L 15.395 71.344 L 15.388 52.909 L 48.548 52.887 L 48.548 71.351 Z M 63.943 86.528 L 63.936 38.381 L 51.512 38.381 C 53.72 35.03 54.976 31.037 54.976 26.479 C 54.976 11.684 42.029 0 26.112 0 L 0 0 L 0 86.528 Z"/>
+    </svg>
+    <h1>Ring the <em>gong</em>.</h1>
+    <p>Leave this open. Every deal your team locks in hits the gong — loud. Every self-prospected opp rings the bell. Your browser needs one tap before it's allowed to make noise.</p>
+    <button id="arm-btn">Arm the gong</button>
+    <div class="fine">Sound is synthesised in-browser — nothing to download.</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  PUB_ID: '2PACX-1vTZ55ABwhnZFv3mDG7tT_5SSwRuSaFdOoVbLOD8fdVbETHWGDE4F-X-QBXzUxgiV5cYheg9ZQ_UxyEX',
+  GIDS: { qwon: 1184815516, sp: 406598532, inbound: 456217951 },
+  POLL_SECONDS: 45,   // how often we re-check the sheet
+  FRESH_DAYS: 30,     // only celebrate deals/opps dated within this window
+};
+
+/* H2 2026 target schedule — per rep, per month.
+   defaultMonthlyTarget + monthlyTargets overrides + startDate / endDate. */
+const TEAM = [
+  { name:'Moath Aladwan',         short:'Moath',    type:'Junior', defaultMonthlyTarget:60000,  monthlyTargets:{} },
+  { name:'Muneerah Alobaidallah', short:'Muneerah', type:'Junior', defaultMonthlyTarget:70000,  monthlyTargets:{} },
+  { name:'Islam Mohsen',          short:'Islam',    type:'Senior', defaultMonthlyTarget:100000, monthlyTargets:{} },
+  { name:'Alanoud Alobaidallah',  short:'Alanoud',  type:'Senior', defaultMonthlyTarget:100000, monthlyTargets:{}, endDate:'2026-06-30' },
+  { name:'Mohammad Bibars',       short:'Bibars',   type:'Senior', defaultMonthlyTarget:80000,  startDate:'2026-07-01', monthlyTargets:{'2026-07':40000,'2026-08':60000} },
+  { name:'Yousuf Mahmoud',        short:'Yousuf',   type:'Senior', defaultMonthlyTarget:100000, startDate:'2026-07-01', monthlyTargets:{'2026-07':33333.33,'2026-08':75000} },
+  // TODO: replace with full names once confirmed — must match Salesforce owner exactly
+  { name:'Ibrahim',               short:'Ibrahim',  type:'Senior', defaultMonthlyTarget:100000, startDate:'2026-08-01', monthlyTargets:{'2026-08':33333.33,'2026-09':75000} },
+  { name:'Raghad',                short:'Raghad',   type:'Junior', defaultMonthlyTarget:70000,  startDate:'2026-08-01', monthlyTargets:{'2026-08':23333.33,'2026-09':52500} },
+];
+const TEAM_NAMES = new Set(TEAM.map(t => t.name));
+const EXCLUDED_OWNERS = new Set(['Emad Shihab']);
+const SEEN_WON = 'bayzat_winwall_seen_won_v1';
+const SEEN_SP  = 'bayzat_winwall_seen_sp_v1';
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+function parseNum(s){ if(s==null) return 0; const n=parseFloat(String(s).replace(/,/g,'').trim()); return isFinite(n)?n:0; }
+function parseDateMDY(s){
+  if(!s) return null;
+  const m=String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/); if(!m) return null;
+  let [,mo,d,y]=m; y=+y; if(y<100) y+=2000; return new Date(+y,+mo-1,+d);
+}
+function fmtSAR(v){ return 'SAR ' + Math.round(v).toLocaleString('en-US'); }
+function fmtShort(v){
+  v=Math.round(v); const a=Math.abs(v);
+  if(a>=1e6) return 'SAR '+(v/1e6).toFixed(2).replace(/\.?0+$/,'')+'M';
+  if(a>=1e3) return 'SAR '+(v/1e3).toFixed(0)+'K';
+  return 'SAR '+v.toLocaleString('en-US');
+}
+function fmtPct(v){ return (Math.round(v*10)/10).toFixed(1); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function isPolicyCancelled(r){ const s=(r['Stage']||'').trim().toLowerCase(); return s==='policy cancelled'||s.includes('policy cancel'); }
+function isTeam(n){ const v=(n||'').trim(); return TEAM_NAMES.has(v) && !EXCLUDED_OWNERS.has(v); }
+
+function monthBounds(d=new Date()){ return { start:new Date(d.getFullYear(),d.getMonth(),1), end:new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59,999) }; }
+function quarterBounds(d=new Date()){ const q=Math.floor(d.getMonth()/3); return { start:new Date(d.getFullYear(),q*3,1), end:new Date(d.getFullYear(),q*3+3,0,23,59,59,999) }; }
+function inRange(d,b){ return !!d && d>=b.start && d<=b.end; }
+
+/* Per-rep, per-month target — honours ramp overrides + tenure boundaries */
+function targetForRepInMonth(rep,date){
+  const mStart=new Date(date.getFullYear(),date.getMonth(),1);
+  if(rep.startDate){ const s=new Date(rep.startDate+'T00:00:00'); if(mStart<new Date(s.getFullYear(),s.getMonth(),1)) return 0; }
+  if(rep.endDate){ const e=new Date(rep.endDate+'T00:00:00'); if(mStart>new Date(e.getFullYear(),e.getMonth(),1)) return 0; }
+  const k=ym(date);
+  if(rep.monthlyTargets && rep.monthlyTargets[k]!==undefined) return rep.monthlyTargets[k];
+  return rep.defaultMonthlyTarget||0;
+}
+function targetForRepInRange(rep,start,end){
+  let t=0; const cur=new Date(start.getFullYear(),start.getMonth(),1);
+  const last=new Date(end.getFullYear(),end.getMonth(),1);
+  while(cur<=last){ t+=targetForRepInMonth(rep,cur); cur.setMonth(cur.getMonth()+1); }
+  return t;
+}
+const teamTargetForRange=(s,e)=>TEAM.reduce((a,t)=>a+targetForRepInRange(t,s,e),0);
+
+/* ============================================================
+   AUDIO — synthesised, no external files
+   ============================================================ */
+let actx=null, armed=false;
+function initAudio(){
+  if(actx) return actx;
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+  return actx;
+}
+/* Classic gong: noise strike + inharmonic partials, long shimmering decay */
+function playGong(){
+  if(!armed) return; const ctx=initAudio(); if(ctx.state==='suspended') ctx.resume();
+  const t=ctx.currentTime;
+  const master=ctx.createGain(); master.gain.value=0.85; master.connect(ctx.destination);
+
+  // long tail via feedback delay (cheap reverb)
+  const dly=ctx.createDelay(0.6); dly.delayTime.value=0.11;
+  const fb=ctx.createGain(); fb.gain.value=0.55;
+  const wet=ctx.createGain(); wet.gain.value=0.32;
+  dly.connect(fb); fb.connect(dly); dly.connect(wet); wet.connect(ctx.destination);
+
+  // metallic strike transient
+  const len=Math.floor(ctx.sampleRate*0.45);
+  const buf=ctx.createBuffer(1,len,ctx.sampleRate); const dat=buf.getChannelData(0);
+  for(let i=0;i<len;i++) dat[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);
+  const noise=ctx.createBufferSource(); noise.buffer=buf;
+  const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1400; bp.Q.value=0.65;
+  const ng=ctx.createGain(); ng.gain.value=0.42;
+  noise.connect(bp); bp.connect(ng); ng.connect(master); ng.connect(dly);
+  noise.start(t);
+
+  // inharmonic partials — what makes a gong a gong (not a bell)
+  const f0=104;
+  const ratios=[1,1.52,1.94,2.44,2.99,3.61,4.17,5.02,6.42,7.81,9.34];
+  ratios.forEach((r,i)=>{
+    const osc=ctx.createOscillator(); osc.type='sine';
+    const f=f0*r*(1+(Math.random()-0.5)*0.012);
+    osc.frequency.setValueAtTime(f*1.03,t);
+    osc.frequency.exponentialRampToValueAtTime(f,t+0.75);       // slight pitch sag
+    const g=ctx.createGain();
+    const amp=0.50/(1+i*0.62);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(amp,t+0.008+i*0.005);
+    const dec=Math.max(1.9,8.2-i*0.52);
+    g.gain.exponentialRampToValueAtTime(0.0007,t+dec);
+    osc.connect(g); g.connect(master); g.connect(dly);
+    osc.start(t); osc.stop(t+dec+0.12);
+  });
+
+  // shimmer — slow tremolo on a high partial pair
+  [3.61,5.02].forEach((r,i)=>{
+    const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.value=f0*r*2;
+    const g=ctx.createGain(); g.gain.value=0;
+    const lfo=ctx.createOscillator(); lfo.frequency.value=4.2+i*1.7;
+    const lg=ctx.createGain(); lg.gain.setValueAtTime(0.035,t);
+    lg.gain.exponentialRampToValueAtTime(0.0004,t+5.5);
+    lfo.connect(lg); lg.connect(g.gain);
+    osc.connect(g); g.connect(master);
+    osc.start(t); lfo.start(t); osc.stop(t+6); lfo.stop(t+6);
+  });
+}
+/* SP ringer: bright ascending two-note bell — clearly NOT the gong */
+function playRinger(){
+  if(!armed) return; const ctx=initAudio(); if(ctx.state==='suspended') ctx.resume();
+  const t=ctx.currentTime;
+  const master=ctx.createGain(); master.gain.value=0.55; master.connect(ctx.destination);
+  const notes=[{f:1046.5,at:0},{f:1568.0,at:0.14}];   // C6 → G6
+  notes.forEach(({f,at})=>{
+    [1,2.76,5.4].forEach((mult,i)=>{                   // bell-ish partials
+      const osc=ctx.createOscillator();
+      osc.type = i===0 ? 'triangle' : 'sine';
+      osc.frequency.value=f*mult;
+      const g=ctx.createGain(); const amp=0.34/(1+i*1.9);
+      g.gain.setValueAtTime(0,t+at);
+      g.gain.linearRampToValueAtTime(amp,t+at+0.005);
+      g.gain.exponentialRampToValueAtTime(0.0006,t+at+1.5-i*0.28);
+      osc.connect(g); g.connect(master);
+      osc.start(t+at); osc.stop(t+at+1.7);
+    });
+  });
+}
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+const cvs=$('confetti'), cx=cvs.getContext('2d');
+let parts=[], raf=null;
+function sizeCanvas(){ cvs.width=innerWidth; cvs.height=innerHeight; }
+addEventListener('resize',sizeCanvas); sizeCanvas();
+function burst(n=190){
+  const colors=['#9647FF','#FFFFFF','#CD2873','#4A378B'];
+  parts=[];
+  for(let i=0;i<n;i++) parts.push({
+    x:innerWidth/2+(Math.random()-0.5)*innerWidth*0.5,
+    y:innerHeight*0.42+(Math.random()-0.5)*120,
+    vx:(Math.random()-0.5)*15, vy:Math.random()*-15-5,
+    w:6+Math.random()*9, h:4+Math.random()*7,
+    rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.34,
+    c:colors[(Math.random()*colors.length)|0], life:1,
+  });
+  cvs.classList.add('on');
+  if(!raf) raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,cvs.width,cvs.height);
+  let alive=0;
+  parts.forEach(p=>{
+    p.vy+=0.30; p.vx*=0.995; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+    if(p.y>innerHeight+60) p.life=0;
+    if(p.life>0){
+      alive++;
+      cx.save(); cx.translate(p.x,p.y); cx.rotate(p.rot);
+      cx.fillStyle=p.c; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx.restore();
+    }
+  });
+  if(alive>0){ raf=requestAnimationFrame(tick); }
+  else{ raf=null; cvs.classList.remove('on'); cx.clearRect(0,0,cvs.width,cvs.height); }
+}
+
+/* ============================================================
+   STATE + FETCH
+   ============================================================ */
+const state={ won:[], sp:[], inboundIds:new Set(), metrics:null, queue:[], busy:false, firstLoad:true, lbPeriod:'month', bgPeriod:'quarter', achRep:'Islam Mohsen' };
+function csvUrl(gid){
+  return `https://docs.google.com/spreadsheets/d/e/${CONFIG.PUB_ID}/pub?gid=${gid}&single=true&output=csv&_cb=${Date.now()}`;
+}
+function fetchTab(gid){
+  return new Promise((res,rej)=>Papa.parse(csvUrl(gid),{download:true,header:true,skipEmptyLines:true,complete:r=>res(r.data),error:rej}));
+}
+function loadSeen(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||'[]')); }catch{ return new Set(); } }
+function saveSeen(k,set){ try{ localStorage.setItem(k,JSON.stringify([...set].slice(-4000))); }catch{} }
+
+async function poll(){
+  try{
+    const [qwon,sp,inb]=await Promise.all([
+      fetchTab(CONFIG.GIDS.qwon), fetchTab(CONFIG.GIDS.sp), fetchTab(CONFIG.GIDS.inbound),
+    ]);
+    state.won = qwon.filter(r=>isTeam(r['Opportunity Owner']) && !isPolicyCancelled(r));
+    state.sp  = sp.filter(r=>isTeam(r['Created By']));
+    state.inboundIds = new Set(inb.map(r=>(r['Opportunity ID']||'').trim()).filter(Boolean));
+    $('dot').classList.remove('off');
+    $('live-txt').textContent='Live';
+    $('sync').textContent='Synced '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    detect();
+    render();
+  }catch(e){
+    console.error(e);
+    $('dot').classList.add('off');
+    $('live-txt').textContent = location.protocol==='file:' ? 'Blocked — run a local server' : 'Reconnecting';
+  }
+}
+
+/* Detect newly-appeared rows. First ever load seeds the baseline silently. */
+function detect(){
+  const now=new Date(), fresh=new Date(now.getTime()-CONFIG.FRESH_DAYS*86400000);
+  const seenWon=loadSeen(SEEN_WON), seenSP=loadSeen(SEEN_SP);
+  const firstEver = seenWon.size===0 && seenSP.size===0;
+
+  state.won.forEach(r=>{
+    const id=(r['Opportunity ID']||'').trim(); if(!id) return;
+    if(seenWon.has(id)) return;
+    seenWon.add(id);
+    const cd=parseDateMDY(r['Close Date']);
+    if(!firstEver && cd && cd>=fresh) state.queue.push({kind:'won',row:r});
+  });
+  state.sp.forEach(r=>{
+    const id=(r['Opportunity ID']||'').trim(); if(!id) return;
+    if(seenSP.has(id)) return;
+    seenSP.add(id);
+    const cd=parseDateMDY(r['Created Date']);
+    if(!firstEver && cd && cd>=fresh) state.queue.push({kind:'sp',row:r});
+  });
+  saveSeen(SEEN_WON,seenWon); saveSeen(SEEN_SP,seenSP);
+  state.firstLoad=false;
+  drain();
+}
+
+/* ============================================================
+   METRICS
+   ============================================================ */
+function compute(){
+  const mb=monthBounds(), qb=quarterBounds();
+  const wonIn=b=>state.won.filter(r=>inRange(parseDateMDY(r['Close Date']),b));
+  const sum=rows=>rows.reduce((a,r)=>a+parseNum(r['Projected Revenue']),0);
+
+  const mRows=wonIn(mb), qRows=wonIn(qb);
+  const mWon=sum(mRows), qWon=sum(qRows);
+  const mTgt=teamTargetForRange(mb.start,mb.end), qTgt=teamTargetForRange(qb.start,qb.end);
+
+  const spIn=b=>state.sp.filter(r=>inRange(parseDateMDY(r['Created Date']),b));
+  const spM=spIn(mb), spQ=spIn(qb);
+
+  // per-rep month leaderboard
+  const board=TEAM.map(t=>{
+    const rows=mRows.filter(r=>(r['Opportunity Owner']||'').trim()===t.name);
+    const won=sum(rows), tgt=targetForRepInMonth(t,new Date());
+    return { name:t.short, deals:rows.length, won, tgt, pct: tgt? (won/tgt)*100 : null };
+  }).filter(r=>r.won>0||r.tgt>0)
+    .sort((a,b)=>b.won-a.won||(b.pct??-1)-(a.pct??-1));
+
+  const recent=[...state.won]
+    .map(r=>({r,d:parseDateMDY(r['Close Date'])})).filter(x=>x.d)
+    .sort((a,b)=>b.d-a.d).slice(0,14).map(x=>x.r);
+
+  return {
+    mWon,mTgt,mPct: mTgt? (mWon/mTgt)*100 : null, mDeals:mRows.length,
+    qWon,qTgt,qPct: qTgt? (qWon/qTgt)*100 : null, qDeals:qRows.length,
+    spM:spM.length, spQ:spQ.length, board, recent,
+    mLabel:mb.start.toLocaleDateString('en-GB',{month:'long',year:'numeric'}),
+    qLabel:'Q'+(Math.floor(new Date().getMonth()/3)+1)+' '+new Date().getFullYear(),
+  };
+}
+const tone=p=>p===null?'low':(p>=100?'win':(p>=70?'mid':'low'));
+
+/* -------- Self-prospected panel: counts, per-rep bars, 14-day shape -------- */
+function renderSPPanel(m){
+  const now=new Date(), t0=new Date(now); t0.setHours(0,0,0,0);
+  const ws=weekStart(now);
+  const spOn=d=>state.sp.filter(r=>{const x=parseDateMDY(r['Created Date']); return x&&x>=d.start&&x<=d.end;});
+  $('sp-d').textContent=spOn({start:t0,end:new Date(t0.getTime()+86399999)}).length;
+  $('sp-w').textContent=spOn({start:ws,end:new Date(ws.getTime()+7*86400000-1)}).length;
+  $('sp-m').textContent=m.spM;
+  $('sp-q').textContent=m.spQ;
+
+  // who's prospecting this month
+  const mb=monthBounds();
+  const per=TEAM.map(t=>({
+    name:t.short,
+    n:state.sp.filter(r=>(r['Created By']||'').trim()===t.name && inRange(parseDateMDY(r['Created Date']),mb)).length,
+  })).sort((a,b)=>b.n-a.n);
+  const max=Math.max(...per.map(p=>p.n),1);
+  $('sp-reps-sub').textContent=`Who's Prospecting — ${m.mLabel}`;
+  $('sp-reps').innerHTML=per.map(p=>`
+    <div class="spr ${p.n?'':'zero'}">
+      <div class="n">${esc(p.name)}</div>
+      <div class="b"><div style="width:${(p.n/max)*100}%"></div></div>
+      <div class="v">${p.n}</div>
+    </div>`).join('');
+
+  // last 14 days
+  const days=[];
+  for(let i=13;i>=0;i--){ const d=new Date(t0); d.setDate(t0.getDate()-i); days.push(d); }
+  const counts=days.map(d=>state.sp.filter(r=>{const x=parseDateMDY(r['Created Date']); return x && x.getTime()===d.getTime();}).length);
+  const cmax=Math.max(...counts,1);
+  $('sp-spark').innerHTML=days.map((d,i)=>`
+    <div class="${i===days.length-1?'today':''}" style="height:${Math.max(4,(counts[i]/cmax)*100)}%" title="${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}: ${counts[i]}">
+      ${counts[i]?`<span>${counts[i]}</span>`:''}
+    </div>`).join('');
+  $('sp-spark-x').innerHTML=`<span>${days[0].toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}</span><span>today</span>`;
+}
+
+function render(){
+  const m=compute(); state.metrics=m;
+
+  $('m-label').textContent=`${m.mLabel} · Attainment`;
+  $('m-pct').innerHTML=(m.mPct===null?'—':fmtPct(m.mPct))+'<span class="sym">%</span>';
+  $('m-pct').className='pct '+tone(m.mPct);
+  $('m-money').innerHTML=`${fmtSAR(m.mWon)} <i>of ${fmtSAR(m.mTgt)}</i>`;
+  $('m-bar').style.width=Math.min(100,m.mPct||0)+'%';
+  $('m-bar').className=tone(m.mPct);
+  $('m-sub').textContent=`${m.mDeals} deal${m.mDeals===1?'':'s'} closed · ${fmtShort(Math.max(0,m.mTgt-m.mWon))} to go`;
+
+  $('q-label').textContent=`${m.qLabel} · Attainment`;
+  $('q-pct').innerHTML=(m.qPct===null?'—':fmtPct(m.qPct))+'<span class="sym">%</span>';
+  $('q-pct').className='pct '+tone(m.qPct);
+  $('q-money').innerHTML=`${fmtSAR(m.qWon)} <i>of ${fmtSAR(m.qTgt)}</i>`;
+  $('q-bar').style.width=Math.min(100,m.qPct||0)+'%';
+  $('q-bar').className=tone(m.qPct);
+  $('q-sub').textContent=`${m.qDeals} deal${m.qDeals===1?'':'s'} closed · ${fmtShort(Math.max(0,m.qTgt-m.qWon))} to go`;
+
+  renderSPPanel(m);
+
+  $('board-title').textContent=`Who's On The Board — ${m.mLabel}`;
+  const max=Math.max(...m.board.map(r=>r.won),1);
+  $('rows').innerHTML = m.board.length ? m.board.map((r,i)=>`
+    <div class="row ${i===0&&r.won>0?'top':''}">
+      <div class="rk">${i+1}</div>
+      <div>
+        <div class="nm">${esc(r.name)}</div>
+        <div class="rb"><div style="width:${(r.won/max)*100}%"></div></div>
+      </div>
+      <div class="vv">${fmtShort(r.won)}<small>${r.pct===null?'no target':fmtPct(r.pct)+'% of target'}</small></div>
+    </div>`).join('') : `<div class="sub">No deals closed yet this month — be the first.</div>`;
+
+  const t=m.recent.map(r=>`<b>${esc(r['Opportunity Name']||'—')}</b> ${fmtShort(parseNum(r['Projected Revenue']))} · ${esc((r['Opportunity Owner']||'').split(' ')[0])}`).join('<span>◆</span>');
+  $('tick').innerHTML = t ? t+'<span>◆</span>'+t : 'No wins recorded yet.';
+
+  renderFame();
+}
+
+/* ============================================================
+   CELEBRATIONS
+   ============================================================ */
+function drain(){
+  if(state.busy || !state.queue.length) return;
+  state.busy=true;
+  const item=state.queue.shift();
+  (item.kind==='won'?showGong:showSP)(item.row, ()=>{ state.busy=false; setTimeout(drain,600); });
+}
+function flashTitle(msg){
+  const orig='Bayzat KSA — Win Wall'; let n=0;
+  const iv=setInterval(()=>{ document.title = (n++%2) ? msg : orig; if(n>12){ clearInterval(iv); document.title=orig; } },700);
+}
+function shake(){
+  const el=$('shake'); el.classList.remove('shaking'); void el.offsetWidth; el.classList.add('shaking');
+  setTimeout(()=>el.classList.remove('shaking'),2200);
+}
+
+function showGong(row,done){
+  render(); // make sure the % behind the gong is current
+  const m=state.metrics;
+  $('g-name').textContent=row['Opportunity Name']||'—';
+  $('g-amt').textContent=fmtShort(parseNum(row['Projected Revenue']));
+  const lives=parseNum(row['Platform Lives']);
+  $('g-lives').innerHTML=lives? lives+' <small>lives</small>' : '—';
+  $('g-owner').textContent=(row['Opportunity Owner']||'—').split(' ')[0];
+  $('g-m').textContent=m.mPct===null?'—':fmtPct(m.mPct)+'%';
+  $('g-q').textContent=m.qPct===null?'—':fmtPct(m.qPct)+'%';
+  const heads=['Make it.','Another one in.','That\'s how it\'s done.','Signed. Sealed.','No-brainer.'];
+  $('g-head').textContent=heads[(Math.random()*heads.length)|0];
+
+  $('gong').classList.add('on');
+  playGong(); shake(); burst(210);
+  flashTitle('🔔 DEAL WON!');
+  setTimeout(()=>{ $('gong').classList.remove('on'); done&&done(); }, 9000);
+}
+function showSP(row,done){
+  render();
+  const m=state.metrics;
+  $('t-name').textContent=row['Opportunity Name']||'—';
+  const lives=parseNum(row['Platform Lives']);
+  $('t-meta').textContent=[(row['Created By']||'').split(' ')[0], row['Lead Source']||'', lives?lives+' lives':''].filter(Boolean).join(' · ');
+  $('t-m').textContent=m.spM; $('t-q').textContent=m.spQ;
+  $('sp-toast').classList.add('on');
+  playRinger();
+  flashTitle('🔔 New SP opp');
+  setTimeout(()=>{ $('sp-toast').classList.remove('on'); done&&done(); }, 7000);
+}
+
+/* ============================================================
+   HALL OF FAME — channel classification, records, leaderboard, badges
+   ============================================================ */
+const OUTBOUND_SOURCES=new Set(['Commercial Team Outbound','Outbound Call']);
+const INBOUND_SOURCES=new Set(['Unbounce','Facebook','Website Application','Zendesk','AI ABM','Email Marketing','Mass Email','customer.io','TikTok','Google Ads','LinkedIn','Organic','Inbound']);
+/* outbound | inbound | referral | other */
+function channelOf(r){
+  const src=(r['Lead Source']||'').trim();
+  if(OUTBOUND_SOURCES.has(src)) return 'outbound';
+  const id=(r['Opportunity ID']||'').trim();
+  if(id && state.inboundIds.has(id)) return 'inbound';
+  if(INBOUND_SOURCES.has(src)) return 'inbound';
+  if(/referr|partner/i.test(src)) return 'referral';
+  return src ? 'inbound' : 'other';
+}
+function weekStart(d){ const x=new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate()-x.getDay()); return x; } // KSA week starts Sunday
+const BUCKET={
+  day:     d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
+  week:    d=>'wk of '+weekStart(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}),
+  month:   d=>d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}),
+  quarter: d=>'Q'+(Math.floor(d.getMonth()/3)+1)+' '+d.getFullYear(),
+  year:    d=>String(d.getFullYear()),
+};
+/* Highest count of rows any single rep achieved inside one bucket */
+function bestCount(rows,ownerField,dateField,gran){
+  const fn=BUCKET[gran], map=new Map();
+  rows.forEach(r=>{
+    const o=(r[ownerField]||'').trim(), d=parseDateMDY(r[dateField]);
+    if(!o||!d) return;
+    const b=fn(d), k=o+'|'+b;
+    const cur=map.get(k)||{owner:o,when:b,count:0};
+    cur.count++; map.set(k,cur);
+  });
+  let best=null; map.forEach(v=>{ if(!best||v.count>best.count) best=v; });
+  return best;
+}
+function maxBy(rows,valFn){
+  let best=null; rows.forEach(r=>{ const v=valFn(r); if(v>0&&(!best||v>best.v)) best={r,v}; });
+  return best;
+}
+const shortName=n=>{ const t=TEAM.find(t=>t.name===(n||'').trim()); return t?t.short:(n||'—').split(' ')[0]; };
+
+const SHAPE={
+  empowerment:'M 117.351562 0 L 156.476562 0 L 156.476562 106.179688 L 117.351562 106.179688 L 117.351562 122.953125 L 78.234375 122.953125 L 78.234375 139.726562 L 39.109375 139.726562 L 39.109375 156.5 L 0 156.5 L 0 50.171875 L 39.109375 50.171875 L 39.109375 33.398438 L 78.234375 33.398438 L 78.234375 16.773438 L 117.351562 16.773438 Z',
+  dynamic:'M 131.152344 0 L 25.308594 0 L 0 26.058594 L 25.300781 52.148438 L 0 78.21875 L 25.300781 104.308594 L 0 130.382812 L 25.28125 156.46875 L 131.191406 156.46875 L 156.476562 130.375 L 131.191406 104.308594 L 156.476562 78.210938 L 131.191406 52.148438 L 156.476562 26.050781 Z',
+  nobrainer:'M 66.757812 0.0078125 L 58.308594 0 L 56.894531 34.535156 L 27.097656 0 L 22.957031 0 L 36.378906 48.949219 L 0.0078125 35.792969 L 0.0078125 41.003906 L 31.058594 82.726562 L 0.0390625 81.890625 L 0.046875 95.203125 L 29.105469 114.222656 L 0.015625 122.640625 L 0 156.46875 L 156.46875 156.46875 L 156.46875 122.640625 L 127.28125 114.328125 L 156.476562 95.195312 L 156.46875 81.882812 L 125.328125 82.789062 L 156.46875 40.96875 L 156.46875 35.753906 L 119.980469 49.007812 L 133.355469 0.0507812 L 129.222656 0.0507812 L 99.457031 34.574219 L 97.996094 0.0390625 L 89.550781 0.0390625 L 78.175781 28.542969 Z',
+  happiness:'M 156.476562 0 L 60.628906 0 L 59.5 12.160156 L 56.207031 23.675781 L 50.859375 34.25 L 43.558594 43.574219 L 34.386719 50.800781 L 23.28125 56.085938 L 11.425781 59.320312 L 0 60.429688 L 0 156.476562 L 11.816406 156.058594 L 23.886719 154.808594 L 36.0625 152.734375 L 47.976562 149.835938 L 59.246094 146.113281 L 69.894531 141.457031 L 80.285156 135.855469 L 90.195312 129.460938 L 99.597656 122.289062 L 108.480469 114.34375 L 116.746094 105.714844 L 124.277344 96.566406 L 131.070312 86.882812 L 137.121094 76.699219 L 142.40625 66.03125 L 146.976562 54.746094 L 150.710938 42.960938 L 153.519531 30.910156 L 155.398438 18.660156 L 156.351562 6.261719 Z',
+  authentic:'M 101.410156 0 L 55.074219 0 L 53.957031 11.089844 L 50.753906 21.445312 L 45.675781 30.828125 L 38.953125 39.019531 L 30.804688 45.804688 L 21.453125 50.933594 L 11.113281 54.199219 L 0 55.367188 L 0 101.117188 L 11.105469 102.285156 L 21.445312 105.550781 L 30.796875 110.679688 L 38.945312 117.457031 L 45.675781 125.65625 L 50.753906 135.046875 L 53.957031 145.402344 L 55.074219 156.492188 L 101.410156 156.492188 L 102.527344 145.402344 L 105.730469 135.046875 L 110.808594 125.65625 L 117.53125 117.464844 L 125.679688 110.6875 L 135.03125 105.558594 L 145.375 102.292969 L 156.476562 101.125 L 156.476562 55.367188 L 145.375 54.199219 L 135.03125 50.933594 L 125.679688 45.804688 L 117.53125 39.027344 L 110.808594 30.835938 L 105.730469 21.445312 L 102.527344 11.089844 Z',
+  connection:'M 102.472656 0 L 90.515625 0.859375 L 78.226562 3.300781 L 72.035156 5.105469 L 73.921875 28.042969 L 63.597656 31.964844 L 53.425781 36.945312 L 43.558594 42.964844 L 34.128906 50.019531 L 24.140625 59.269531 L 15.816406 69.046875 L 9.195312 79.171875 L 4.320312 89.445312 L 1.234375 99.671875 L 0 109.671875 L 0.621094 119.238281 L 3.152344 128.195312 L 7.628906 136.335938 L 14.101562 143.457031 L 22.398438 149.246094 L 31.960938 153.324219 L 42.554688 155.730469 L 53.953125 156.484375 L 65.910156 155.625 L 78.199219 153.183594 L 84.390625 151.378906 L 82.503906 128.441406 L 92.828125 124.519531 L 103 119.539062 L 112.867188 113.519531 L 122.296875 106.464844 L 132.285156 97.21875 L 140.609375 87.4375 L 147.230469 77.3125 L 152.105469 67.039062 L 155.191406 56.8125 L 156.449219 46.816406 L 155.828125 37.246094 L 153.296875 28.289062 L 148.816406 20.148438 L 142.339844 13.015625 L 134.035156 7.242188 L 124.464844 3.160156 L 113.871094 0.757812 Z',
+};
+const medal=(k,w=140)=>`<svg class="medal-shape" viewBox="0 0 156.5 156.5" width="${w}" fill="#fff" aria-hidden="true"><path d="${SHAPE[k]}"/></svg>`;
+
+function lbBounds(p){
+  const n=new Date();
+  if(p==='month')   return monthBounds(n);
+  if(p==='quarter') return quarterBounds(n);
+  if(p==='year')    return {start:new Date(n.getFullYear(),0,1), end:new Date(n.getFullYear(),11,31,23,59,59,999)};
+  return {start:new Date(2000,0,1), end:new Date(n.getFullYear()+10,11,31,23,59,59,999)};
+}
+function renderLeaderboard(){
+  const p=state.lbPeriod, b=lbBounds(p);
+  const rows=TEAM.map(t=>{
+    const wr=state.won.filter(r=>(r['Opportunity Owner']||'').trim()===t.name && inRange(parseDateMDY(r['Close Date']),b));
+    const sr=state.sp.filter(r=>(r['Created By']||'').trim()===t.name && inRange(parseDateMDY(r['Created Date']),b));
+    const won=wr.reduce((a,r)=>a+parseNum(r['Projected Revenue']),0);
+    const tgt=(p==='all')?0:targetForRepInRange(t,b.start,b.end);
+    const pct=tgt?(won/tgt)*100:null;
+    const points=Math.round(won/1000) + sr.length*25 + wr.length*50 + (pct!==null&&pct>=100?250:0);
+    return { name:t.short, type:t.type, won, deals:wr.length, sp:sr.length, tgt, pct, points };
+  }).filter(r=>r.won>0||r.sp>0||r.tgt>0)
+    .sort((a,b)=>b.points-a.points||b.won-a.won);
+
+  const medals=['1','2','3'];
+  $('lb').innerHTML = rows.length ? rows.map((r,i)=>`
+    <div class="lb-row ${i<3?'r'+(i+1):''}">
+      <div class="medal">${i<3?medals[i]:(i+1)}</div>
+      <div class="who"><span class="nm">${esc(r.name)}</span><span class="tp">${esc(r.type)}</span></div>
+      <div class="cell"><div class="l">Won</div><div class="v pu">${fmtShort(r.won)}</div></div>
+      <div class="cell"><div class="l">Deals</div><div class="v">${r.deals}</div></div>
+      <div class="cell"><div class="l">SP Opps</div><div class="v">${r.sp}</div></div>
+      <div class="cell"><div class="l">${r.pct===null?'No target':fmtPct(r.pct)+'% of target'}</div>
+        <div class="pts"><b>${r.points.toLocaleString('en-US')}</b><i>pts</i></div></div>
+    </div>`).join('') : `<div class="lb-row"><div></div><div class="who"><span class="nm" style="color:var(--g2)">Nothing logged in this period yet</span></div><div></div><div></div><div></div><div></div></div>`;
+}
+
+function renderBadges(){
+  const p=state.bgPeriod, b=lbBounds(p);
+  const PW={month:'this month',quarter:'this quarter',year:'this year',all:'all-time'}[p];
+  const rev=r=>parseNum(r['Projected Revenue']);
+  // Scope every "biggest / most" trophy to the selected period so the cabinet
+  // stays winnable for the current squad instead of frozen on old records.
+  const won=state.won.filter(r=>inRange(parseDateMDY(r['Close Date']),b));
+
+  const big      = maxBy(won, rev);
+  const bigOut   = maxBy(won.filter(r=>channelOf(r)==='outbound'), rev);
+  const bigIn    = maxBy(won.filter(r=>channelOf(r)==='inbound'),  rev);
+  const bigLives = maxBy(won, r=>parseNum(r['Platform Lives']));
+
+  // Target crusher — best attainment vs the period's target
+  let crusher=null;
+  TEAM.forEach(t=>{
+    const tgt=(p==='all')?0:targetForRepInRange(t,b.start,b.end); if(!tgt) return;
+    const v=won.filter(r=>(r['Opportunity Owner']||'').trim()===t.name).reduce((a,r)=>a+rev(r),0);
+    const pct=(v/tgt)*100;
+    if(v>0 && (!crusher||pct>crusher.pct)) crusher={name:t.short,pct,won:v};
+  });
+  // Volume king — most deals closed in the period
+  let king=null;
+  TEAM.forEach(t=>{
+    const c=won.filter(r=>(r['Opportunity Owner']||'').trim()===t.name).length;
+    if(c>0 && (!king||c>king.c)) king={name:t.short,c};
+  });
+  $('bg-note').textContent = p==='all'
+    ? 'All-time records — the ones that take some beating.'
+    : `Held ${PW} — take one off someone.`;
+
+  const dealCard=(cls,shape,title,desc,best,valFn,extra)=>{
+    if(!best) return `<div class="bg">${medal(shape)}<div class="bt">${title}</div><div class="bd">${desc}</div><div class="empty">Up for grabs — no holder yet.</div></div>`;
+    return `<div class="bg won ${cls||''}">${medal(shape)}
+      <div class="bt">${title}</div><div class="bd">${desc}</div>
+      <div class="bv">${valFn(best)}</div>
+      <div class="bh"><span class="crown">♛</span>${esc(shortName(best.r['Opportunity Owner']))}</div>
+      <div class="bw">${esc(best.r['Opportunity Name']||'')}${extra?' · '+extra(best):''}</div>
+    </div>`;
+  };
+
+  const recCard=(cls,shape,title,desc,rows)=>{
+    const body = rows.some(x=>x.best)
+      ? `<div class="recs">${rows.map(x=>`
+          <div class="rec ${cls||''}">
+            <div class="rp">${x.label}</div>
+            <div class="rh">${x.best?esc(shortName(x.best.owner)):'<span style="color:var(--g3)">—</span>'}
+              ${x.best?`<span class="rw">${esc(x.best.when)}</span>`:''}</div>
+            <div class="rv">${x.best?x.best.count:'—'}</div>
+          </div>`).join('')}</div>`
+      : `<div class="empty">No records yet.</div>`;
+    return `<div class="bg ${rows.some(x=>x.best)?'won':''} ${cls||''}">${medal(shape)}
+      <div class="bt">${title}</div><div class="bd">${desc}</div>${body}</div>`;
+  };
+
+  // Record tables are ALL-TIME by design (they already break down by bucket),
+  // so they read from the unscoped data — not the period-filtered `won` above.
+  const spRecs=['day','week','month','quarter','year'].map(g=>({label:g,best:bestCount(state.sp,'Created By','Created Date',g)}));
+  const outWonAll=state.won.filter(r=>channelOf(r)==='outbound');
+  const outRecs=['week','month','quarter','year'].map(g=>({label:g,best:bestCount(outWonAll,'Opportunity Owner','Close Date',g)}));
+
+  $('badges').innerHTML=[
+    recCard('', 'nobrainer','Prospecting Records','Self-prospected opps one rep created in a single…',spRecs),
+    recCard('cherry','dynamic','Outbound Closing Records','Outbound deals one rep closed in a single…',outRecs),
+  ].join('');
+
+  // ---- Trophy cabinet (real trophies) ----
+  const trophyCard=(o)=>{
+    const held=!!o.holder;
+    const col = held ? (o.elite?'#CD2873':'#9647FF') : '#4B4B4B';
+    return `<div class="tr ${held?'held':''} ${o.elite?'elite':''}">
+      <div class="ribbon ${held?(o.elite?'elite':''):'open'}">${held?(o.elite?'Elite':'Held'):'Vacant'}</div>
+      <div class="cup">${trophySVG(col,92,!held)}</div>
+      <div class="tn">${o.title}</div>
+      <div class="td">${o.desc}</div>
+      ${held
+        ? `<div class="tv">${o.value}</div>
+           <div class="th">${esc(o.holder)}</div>
+           <div class="tw">${esc(o.sub||'')}</div>`
+        : `<div class="vacant">Nobody holds this ${PW==='all-time'?'':PW}. Go take it.</div>`}
+    </div>`;
+  };
+  const dealTrophy=(title,desc,best,elite,valFn)=>({
+    title,desc,elite,
+    holder: best?shortName(best.r['Opportunity Owner']):null,
+    value:  best?valFn(best):null,
+    sub:    best?`${best.r['Opportunity Name']||''} · ${parseNum(best.r['Platform Lives'])||'—'} lives`:'',
+  });
+  $('trophies').innerHTML=[
+    dealTrophy('The Heavyweight',`Biggest single deal closed ${PW}.`, big, true, x=>fmtShort(x.v)),
+    dealTrophy('The Hunter',`Biggest outbound deal won ${PW}.`, bigOut, false, x=>fmtShort(x.v)),
+    dealTrophy('The Magnet',`Biggest inbound deal won ${PW}.`, bigIn, false, x=>fmtShort(x.v)),
+    dealTrophy('The People Mover',`Most employee lives in one deal ${PW}.`, bigLives, false, x=>x.v.toLocaleString('en-US')+' lives'),
+    { title:'Target Crusher', desc:`Highest attainment against target ${PW}.`, elite:true,
+      holder:crusher?crusher.name:null, value:crusher?fmtPct(crusher.pct)+'%':null,
+      sub:crusher?fmtSAR(crusher.won)+' closed':'' },
+    { title:'Volume King', desc:`Most deals closed ${PW} — volume has its own quality.`, elite:false,
+      holder:king?king.name:null, value:king?king.c:null, sub:king?'deals signed':'' },
+  ].map(trophyCard).join('');
+}
+
+/* A proper trophy — cup, handles, stem, plinth. Solid brand colours, no gradients. */
+function trophySVG(color,size=92,dim=false){
+  return `<svg viewBox="0 0 64 74" width="${size}" aria-hidden="true" style="${dim?'opacity:.55':''}">
+    <path d="M13 9H5.5c0 9.5 3.6 15 9.5 16.4" fill="none" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M51 9h7.5c0 9.5-3.6 15-9.5 16.4" fill="none" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+    <g fill="${color}">
+      <path d="M12 4h40v15c0 11.5-9 20.5-20 20.5S12 30.5 12 19V4z"/>
+      <rect x="28.5" y="39" width="7" height="11"/>
+      <rect x="21" y="50" width="22" height="5.5" rx="2.5"/>
+      <path d="M14.5 59h35l3.5 10H11z"/>
+    </g>
+    <path d="M32 12.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="rgba(0,0,0,.32)"/>
+  </svg>`;
+}
+const LOCK=`<svg viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" stroke-width="2.6" stroke-linecap="round"><rect x="4.5" y="11" width="15" height="9.5" rx="2"/><path d="M8 11V7.8a4 4 0 0 1 8 0V11"/></svg>`;
+
+/* ============================================================
+   ACHIEVEMENTS — per-rep, unlock once and it's yours
+   ============================================================ */
+const ACHIEVEMENTS=[
+  {n:'First Blood',        d:'Close your first deal.',                      tier:'common', m:s=>s.dealsAll, goal:1,      f:v=>v+' closed'},
+  {n:'Prospector',         d:'Create 6 self-prospected opps in a month.',   tier:'common', m:s=>s.spM,      goal:6,      f:v=>v+' this month'},
+  {n:"Hunter's Licence",   d:'Close 5 outbound deals, all time.',           tier:'common', m:s=>s.outAll,   goal:5,      f:v=>v+' outbound'},
+  {n:'Deal Machine',       d:'Close 5 deals in a single month.',            tier:'rare',   m:s=>s.dealsM,   goal:5,      f:v=>v+' this month'},
+  {n:'Six Figures',        d:'Win SAR 100K in a single month.',             tier:'rare',   m:s=>s.wonM,     goal:100000, f:v=>fmtShort(v)},
+  {n:'Target Hit',         d:'Reach 100% of your monthly target.',          tier:'rare',   m:s=>s.attainM,  goal:100,    f:v=>fmtPct(v)+'%'},
+  {n:'Whale Hunter',       d:'Close a single deal worth SAR 50K or more.',  tier:'rare',   m:s=>s.maxDeal,  goal:50000,  f:v=>fmtShort(v)},
+  {n:'Magnetic',           d:'Close 25 inbound deals, all time.',           tier:'rare',   m:s=>s.inAll,    goal:25,     f:v=>v+' inbound'},
+  {n:'Century',            d:'Close 25 deals, all time.',                   tier:'rare',   m:s=>s.dealsAll, goal:25,     f:v=>v+' closed'},
+  {n:'Double Digits',      d:'Close 10 deals in a single month.',           tier:'elite',  m:s=>s.dealsM,   goal:10,     f:v=>v+' this month'},
+  {n:'Quarter Million',    d:'Win SAR 250K in a single quarter.',           tier:'elite',  m:s=>s.wonQ,     goal:250000, f:v=>fmtShort(v)},
+  {n:'Overachiever',       d:'Reach 150% of your monthly target.',          tier:'elite',  m:s=>s.attainM,  goal:150,    f:v=>fmtPct(v)+'%'},
+  {n:'Mega Whale',         d:'Close a single deal worth SAR 100K or more.', tier:'elite',  m:s=>s.maxDeal,  goal:100000, f:v=>fmtShort(v)},
+  {n:'Enterprise Class',   d:'Land a deal with 500+ employee lives.',       tier:'elite',  m:s=>s.maxLives, goal:500,    f:v=>v.toLocaleString('en-US')+' lives'},
+  {n:'Prospecting Beast',  d:'Create 12 self-prospected opps in a month.',  tier:'elite',  m:s=>s.spM,      goal:12,     f:v=>v+' this month'},
+  {n:'Rainmaker',          d:'Close 15 outbound deals, all time.',          tier:'elite',  m:s=>s.outAll,   goal:15,     f:v=>v+' outbound'},
+  {n:'Veteran',            d:'Close 50 deals, all time.',                   tier:'elite',  m:s=>s.dealsAll, goal:50,     f:v=>v+' closed'},
+];
+function repStats(name){
+  const rep=TEAM.find(t=>t.name===name);
+  const mb=monthBounds(), qb=quarterBounds(), rev=r=>parseNum(r['Projected Revenue']);
+  const w  = state.won.filter(r=>(r['Opportunity Owner']||'').trim()===name);
+  const wm = w.filter(r=>inRange(parseDateMDY(r['Close Date']),mb));
+  const wq = w.filter(r=>inRange(parseDateMDY(r['Close Date']),qb));
+  const sp = state.sp.filter(r=>(r['Created By']||'').trim()===name);
+  const spm= sp.filter(r=>inRange(parseDateMDY(r['Created Date']),mb));
+  const wonM=wm.reduce((a,r)=>a+rev(r),0);
+  const mtgt=rep?targetForRepInMonth(rep,new Date()):0;
+  return {
+    dealsAll:w.length, dealsM:wm.length,
+    wonM, wonQ:wq.reduce((a,r)=>a+rev(r),0),
+    maxDeal:Math.max(0,...w.map(rev)),
+    maxLives:Math.max(0,...w.map(r=>parseNum(r['Platform Lives']))),
+    attainM: mtgt? (wonM/mtgt)*100 : 0,
+    spM:spm.length,
+    outAll:w.filter(r=>channelOf(r)==='outbound').length,
+    inAll: w.filter(r=>channelOf(r)==='inbound').length,
+  };
+}
+function renderAchPicker(){
+  const host=$('ach-pick');
+  if(host.dataset.built) return;
+  host.dataset.built='1';
+  host.innerHTML=TEAM.filter(t=>!t.endDate).map(t=>
+    `<button class="chip ${t.name===state.achRep?'active':''}" data-rep="${esc(t.name)}">${esc(t.short)}</button>`).join('');
+  host.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    state.achRep=c.dataset.rep;
+    host.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x===c));
+    renderAchievements();
+  }));
+}
+function renderAchievements(){
+  renderAchPicker();
+  const name=state.achRep, s=repStats(name);
+  const items=ACHIEVEMENTS.map(a=>{
+    const v=a.m(s), on=v>=a.goal;
+    return {...a, v, on, pct:Math.min(100,(v/a.goal)*100)};
+  });
+  const got=items.filter(i=>i.on).length;
+  $('ach-who').textContent=`${shortName(name)} · achievements`;
+  $('ach-n').textContent=got;
+  $('ach-t').textContent=items.length;
+  $('ach-track').style.width=(got/items.length)*100+'%';
+  const next=items.filter(i=>!i.on).sort((a,b)=>b.pct-a.pct)[0];
+  $('ach-next').textContent = next ? `Closest: ${next.n} — ${a_fmt(next)}` : 'Every badge unlocked. Legend.';
+
+  // unlocked first, then closest-to-unlock
+  items.sort((a,b)=> (b.on-a.on) || (b.pct-a.pct));
+  $('achs').innerHTML=items.map(i=>{
+    const col = i.on ? (i.tier==='elite'?'#CD2873':'#9647FF') : '#4B4B4B';
+    return `<div class="ach ${i.on?'on':'off'} ${i.tier==='elite'?'elite':''}">
+      <div class="tierpill">${i.tier}</div>
+      <div class="medal-cup">${trophySVG(col,58,!i.on)}${i.on?'':`<div class="lock">${LOCK}</div>`}</div>
+      <div class="an">${i.n}</div>
+      <div class="ad">${i.d}</div>
+      <div class="prog"><div style="width:${i.pct}%"></div></div>
+      <div class="pv">${i.on?'✓ Unlocked':a_fmt(i)}</div>
+    </div>`;
+  }).join('');
+}
+const a_fmt=i=>`${i.f(i.v)} / ${i.f(i.goal)}`;
+
+function renderFame(){ renderLeaderboard(); renderBadges(); renderAchievements(); }
+
+/* ============================================================
+   WIRE UP
+   ============================================================ */
+$('arm-btn').addEventListener('click',()=>{
+  armed=true; initAudio();
+  // unlock the audio graph inside the user gesture
+  const ctx=initAudio(); if(ctx.state==='suspended') ctx.resume();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  g.gain.value=0.0001; o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.02);
+  $('arm').classList.add('off');
+  poll();
+  setInterval(poll, CONFIG.POLL_SECONDS*1000);
+});
+$('refresh').addEventListener('click',poll);
+$('test-gong').addEventListener('click',()=>{
+  const r=state.won.slice(-1)[0]||{'Opportunity Name':'Test Company — Platform 2026','Projected Revenue':'96,000.00','Platform Lives':'240','Opportunity Owner':'Islam Mohsen'};
+  state.queue.push({kind:'won',row:r}); drain();
+});
+$('test-sp').addEventListener('click',()=>{
+  const r=state.sp.slice(-1)[0]||{'Opportunity Name':'Test Prospect — Platform 2026','Created By':'Moath Aladwan','Lead Source':'Commercial Team Outbound','Platform Lives':'120'};
+  state.queue.push({kind:'sp',row:r}); drain();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $('gong').classList.remove('on'); $('sp-toast').classList.remove('on'); } });
+
+/* view tabs */
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));
+  const v=btn.dataset.view;
+  $('view-wall').hidden = v!=='wall';
+  $('view-fame').hidden = v!=='fame';
+}));
+/* leaderboard period */
+document.querySelectorAll('#lb-seg button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#lb-seg button').forEach(b=>b.classList.toggle('active',b===btn));
+  state.lbPeriod=btn.dataset.p;
+  renderLeaderboard();
+}));
+/* trophy cabinet period */
+document.querySelectorAll('#bg-seg button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#bg-seg button').forEach(b=>b.classList.toggle('active',b===btn));
+  state.bgPeriod=btn.dataset.p;
+  renderBadges();
+}));
+</script>
+</body>
+</html>
