@@ -962,7 +962,7 @@ function render(){
       <div class="vv">${fmtShort(r.won)}<small>${r.pct===null?'no target':fmtPct(r.pct)+'% of target'}</small></div>
     </div>`).join('') : `<div class="sub">No deals closed yet this month — be the first.</div>`;
 
-  const t=m.recent.map(r=>`<b>${esc(r['Opportunity Name']||'—')}</b> ${fmtShort(parseNum(r['Projected Revenue']))} · ${esc((r['Opportunity Owner']||'').split(' ')[0])}`).join('<span>◆</span>');
+  const t=m.recent.map(r=>`<b>${esc(r['Opportunity Name']||'—')}</b> ${fmtShort(parseNum(r['Projected Revenue']))} · ${esc(shortName(r['Opportunity Owner']))}`).join('<span>◆</span>');
   $('tick').innerHTML = t ? t+'<span>◆</span>'+t : 'No wins recorded yet.';
 
   renderFame();
@@ -993,7 +993,7 @@ function showGong(row,done){
   $('g-amt').textContent=fmtShort(parseNum(row['Projected Revenue']));
   const lives=parseNum(row['Platform Lives']);
   $('g-lives').innerHTML=lives? lives+' <small>lives</small>' : '—';
-  $('g-owner').textContent=(row['Opportunity Owner']||'—').split(' ')[0];
+  $('g-owner').textContent=shortName(row['Opportunity Owner'])||'—';
   $('g-m').textContent=m.mPct===null?'—':fmtPct(m.mPct)+'%';
   $('g-q').textContent=m.qPct===null?'—':fmtPct(m.qPct)+'%';
   const heads=['Make it.','Another one in.','That\'s how it\'s done.','Signed. Sealed.','No-brainer.'];
@@ -1009,7 +1009,7 @@ function showSP(row,done){
   const m=state.metrics;
   $('t-name').textContent=row['Opportunity Name']||'—';
   const lives=parseNum(row['Platform Lives']);
-  $('t-meta').textContent=[(row['Created By']||'').split(' ')[0], row['Lead Source']||'', lives?lives+' lives':''].filter(Boolean).join(' · ');
+  $('t-meta').textContent=[shortName(row['Created By']), row['Lead Source']||'', lives?lives+' lives':''].filter(Boolean).join(' · ');
   $('t-m').textContent=m.spM; $('t-q').textContent=m.spQ;
   $('sp-toast').classList.add('on');
   playRinger();
