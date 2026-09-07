@@ -18,20 +18,41 @@
   --g1:#C8C8C8; --g2:#9A9A9A; --g3:#727272; --g4:#4B4B4B;
   --ok:#2FD07A;
   --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px;
+
+  /* layered surfaces — hairlines and low-alpha fills instead of heavy boxes */
+  --ground:#1C1A20;
+  --surface-1:rgba(255,255,255,.042);
+  --surface-2:rgba(255,255,255,.065);
+  --line-1:rgba(255,255,255,.085);
+  --line-2:rgba(255,255,255,.14);
+  --glow-purple:rgba(150,71,255,.30);
+
+  /* fluid type — scales properly from a laptop up to a wall-mounted TV */
+  --fs-hero:clamp(64px, 6.4vw, 118px);
+  --fs-big:clamp(46px, 4.2vw, 74px);
+  --fs-mid:clamp(28px, 2.3vw, 40px);
+  --fs-label:clamp(10px, .78vw, 13px);
+  --fs-body:clamp(12px, .92vw, 15px);
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
 }
 *{box-sizing:border-box; margin:0; padding:0}
 html,body{height:100%}
 body{
   font-family:Arial,Helvetica,sans-serif;
-  background:var(--charcoal); color:var(--white);
+  background:var(--ground); color:var(--white);
   overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;      /* numbers stop jittering as they update */
 }
 /* subtle brand texture — purple glow, never a gradient on shapes/text */
 body::before{
   content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:
-    radial-gradient(900px 520px at 12% -10%, rgba(150,71,255,.30), transparent 70%),
-    radial-gradient(760px 480px at 100% 110%, rgba(74,55,139,.34), transparent 72%);
+    radial-gradient(1100px 620px at 8% -14%, rgba(150,71,255,.34), transparent 68%),
+    radial-gradient(820px 520px at 102% 112%, rgba(74,55,139,.38), transparent 70%),
+    radial-gradient(600px 400px at 50% 50%, rgba(205,40,115,.05), transparent 75%);
 }
 h1,h2,h3,.up{text-transform:uppercase; font-weight:800; letter-spacing:.04em}
 
@@ -50,10 +71,23 @@ h1,h2,h3,.up{text-transform:uppercase; font-weight:800; letter-spacing:.04em}
   display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700;
   text-transform:uppercase; letter-spacing:.10em; color:var(--g1);
 }
-.dot{width:9px; height:9px; border-radius:50%; background:var(--ok); animation:pulse 1.8s ease-in-out infinite}
+.dot{width:9px; height:9px; border-radius:50%; background:var(--ok); position:relative}
+.dot::after{
+  content:''; position:absolute; inset:-5px; border-radius:50%;
+  border:1.5px solid var(--ok); opacity:.7; animation:ping 2s cubic-bezier(0,.2,.8,1) infinite;
+}
+.dot.off::after{display:none}
+@keyframes ping{0%{transform:scale(.55); opacity:.85}80%,100%{transform:scale(1.5); opacity:0}}
 .dot.off{background:var(--g3); animation:none}
 @keyframes pulse{0%,100%{opacity:1; transform:scale(1)}50%{opacity:.35; transform:scale(.82)}}
 .spacer{flex:1}
+/* first-load skeleton — better than an em dash where a number belongs */
+.skel{
+  display:inline-block; min-width:2.2em; height:.7em; border-radius:6px;
+  background:linear-gradient(90deg,rgba(255,255,255,.07),rgba(255,255,255,.17),rgba(255,255,255,.07));
+  background-size:220% 100%; animation:skel 1.4s ease-in-out infinite;
+}
+@keyframes skel{0%{background-position:120% 0}100%{background-position:-120% 0}}
 .tbtn{
   font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
   color:var(--white); background:transparent; border:2px solid rgba(255,255,255,.28);
@@ -70,18 +104,42 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 .hero{display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); flex:0 0 auto}
 .card{
   position:relative; overflow:hidden;
-  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
-  border-radius:18px; padding:26px 30px;
+  background:var(--surface-1); border:1px solid var(--line-1);
+  border-radius:20px; padding:26px 30px;
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 18px 40px rgba(0,0,0,.28);
 }
-.card.hot{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.42)}
-.klabel{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--g1)}
-.pct{font-size:86px; font-weight:800; line-height:.92; letter-spacing:-.02em; margin:10px 0 2px}
-.pct .sym{font-size:38px; margin-left:4px; color:var(--purple)}
+.card::after{                                  /* top edge catch-light */
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.20),transparent);
+}
+.card.hot{
+  background:linear-gradient(160deg, rgba(150,71,255,.20), rgba(150,71,255,.08));
+  border-color:rgba(150,71,255,.45);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 22px 60px rgba(150,71,255,.20);
+}
+.klabel{font-size:var(--fs-label); font-weight:800; text-transform:uppercase; letter-spacing:.18em; color:var(--g2)}
+.pct{font-size:var(--fs-hero); font-weight:800; line-height:.88; letter-spacing:-.035em; margin:12px 0 4px}
+.pct .sym{font-size:.36em; margin-left:6px; color:var(--purple); letter-spacing:0}
 .pct.win{color:var(--ok)} .pct.mid{color:#FFC53D} .pct.low{color:var(--white)}
-.money{font-size:19px; font-weight:700; color:var(--white)}
+.money{font-size:var(--fs-mid); font-weight:700; color:var(--white); letter-spacing:-.015em}
 .money i{font-style:normal; color:var(--g2); font-weight:400}
-.bar{height:12px; border-radius:8px; background:rgba(255,255,255,.13); overflow:hidden; margin-top:16px}
-.bar>div{height:100%; border-radius:8px; background:var(--purple); width:0; transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar{
+  height:14px; border-radius:999px; overflow:hidden; margin-top:20px;
+  background:rgba(255,255,255,.10);
+  box-shadow:0 1px 2px rgba(0,0,0,.35) inset, 0 0 0 1px rgba(255,255,255,.05) inset;
+}
+.bar>div{
+  height:100%; border-radius:999px; width:0; position:relative;
+  background:linear-gradient(90deg,var(--purple-dark),var(--purple));
+  box-shadow:0 0 20px var(--glow-purple);
+  transition:width 1.1s cubic-bezier(.16,.84,.28,1);
+}
+.bar>div::after{                               /* travelling sheen */
+  content:''; position:absolute; inset:0; border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+  transform:translateX(-100%); animation:sheen 4.2s ease-in-out infinite;
+}
+@keyframes sheen{0%{transform:translateX(-100%)}60%,100%{transform:translateX(220%)}}
 .bar>div.win{background:var(--ok)} .bar>div.mid{background:#FFC53D}
 .sub{margin-top:10px; font-size:13px; color:var(--g1)}
 .shape{position:absolute; right:-16px; bottom:-18px; opacity:.10; pointer-events:none}
@@ -111,8 +169,8 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 .spx-sub{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g3); margin-bottom:10px}
 .spr{display:grid; grid-template-columns:74px 1fr 26px; align-items:center; gap:10px; margin-bottom:8px}
 .spr .n{font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.spr .b{height:8px; border-radius:5px; background:rgba(255,255,255,.10); overflow:hidden}
-.spr .b>div{height:100%; border-radius:5px; background:var(--purple); width:0; transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.spr .b{height:8px; border-radius:999px; background:rgba(255,255,255,.10); overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
+.spr .b>div{height:100%; border-radius:999px; background:linear-gradient(90deg,var(--purple-dark),var(--purple)); width:0; transition:width .9s cubic-bezier(.16,.84,.28,1)}
 .spr .v{font-size:13px; font-weight:800; text-align:right}
 .spr.zero .n,.spr.zero .v{color:var(--g3)}
 .spark{display:flex; align-items:flex-end; gap:4px; height:96px; padding-top:20px}
@@ -124,13 +182,20 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 .board{display:flex; flex-direction:column; min-height:0}
 .board h3{font-size:12px; letter-spacing:.14em; color:var(--g1); margin-bottom:14px}
 .rows{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:9px}
-.row{display:grid; grid-template-columns:22px 1fr 96px; align-items:center; gap:12px}
+.row{display:grid; grid-template-columns:26px 30px 1fr 104px; align-items:center; gap:12px}
 .row .rk{font-size:13px; font-weight:800; color:var(--g3); text-align:right}
 .row.top .rk{color:var(--purple)}
+.row .av{
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; letter-spacing:.02em;
+  background:var(--surface-2); color:var(--g1); border:1px solid var(--line-1);
+}
+.row.top .av{background:var(--purple); color:#fff; border-color:transparent; box-shadow:0 0 18px var(--glow-purple)}
 .row .nm{font-size:14px; font-weight:700; margin-bottom:5px}
-.row .rb{height:9px; border-radius:6px; background:rgba(255,255,255,.11); overflow:hidden}
-.row .rb>div{height:100%; border-radius:6px; background:var(--purple-dark); width:0; transition:width .9s cubic-bezier(.2,.8,.2,1)}
-.row.top .rb>div{background:var(--purple)}
+.row .rb{height:9px; border-radius:999px; background:rgba(255,255,255,.10); overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
+.row .rb>div{height:100%; border-radius:999px; background:var(--purple-dark); width:0; transition:width 1s cubic-bezier(.16,.84,.28,1)}
+.row.top .rb>div{background:linear-gradient(90deg,var(--purple-dark),var(--purple)); box-shadow:0 0 14px var(--glow-purple)}
 .row .vv{text-align:right; font-size:13px; font-weight:700}
 .row .vv small{display:block; font-size:11px; font-weight:400; color:var(--g2)}
 
@@ -144,7 +209,11 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
   font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
   color:var(--white); background:var(--purple); padding:5px 11px; border-radius:999px; white-space:nowrap;
 }
-.tick-wrap{flex:1; overflow:hidden; position:relative; height:20px}
+.tick-wrap{
+  flex:1; overflow:hidden; position:relative; height:22px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+}
 .tick{position:absolute; white-space:nowrap; font-size:14px; color:var(--g1); will-change:transform; animation:slide 46s linear infinite}
 .tick b{color:var(--white)} .tick span{color:var(--purple); margin:0 14px}
 @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -154,6 +223,7 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
   position:fixed; inset:0; z-index:60; display:none;
   background:rgba(0,0,0,.90); backdrop-filter:blur(3px);
   align-items:center; justify-content:center; padding:var(--s5);
+  cursor:pointer;                 /* it stays up until somebody clicks it away */
 }
 #gong.on{display:flex}
 .gcard{
@@ -185,6 +255,7 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
   background:var(--charcoal); border:2px solid var(--cherry);
   box-shadow:0 28px 80px rgba(0,0,0,.62);
 }
+#sp-toast{cursor:pointer}
 #sp-toast.on{display:block; animation:slidein .5s cubic-bezier(.2,1.2,.3,1) both}
 @keyframes slidein{from{transform:translateX(120%) scale(.94); opacity:0}to{transform:translateX(0) scale(1); opacity:1}}
 #sp-toast .k{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.16em; color:var(--cherry)}
@@ -195,13 +266,25 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 #sp-toast .c div{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:var(--g1)}
 #sp-toast .c b{display:block; font-size:24px; letter-spacing:-.01em; color:var(--white); margin-top:4px}
 
+/* "click anywhere" hint — celebrations wait for a human now, so say so */
+.dismiss-hint{
+  margin-top:var(--s3); font-size:11px; font-weight:800; text-transform:uppercase;
+  letter-spacing:.18em; color:rgba(255,255,255,.72);
+  animation:sndfade 2.6s ease-in-out infinite;
+}
+#sp-toast .dismiss-hint{
+  margin-top:14px; font-size:9px; letter-spacing:.14em; color:var(--g3);
+}
+
 /* subtle sound hint — replaces the old full-screen arm gate */
 .snd{
-  display:inline-flex; align-items:center; gap:7px;
-  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
-  color:var(--g1); background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:6px 12px;
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em;
+  color:var(--g3); background:transparent;
+  border:1px solid var(--line-1); border-radius:999px; padding:5px 10px;
+  animation:sndfade 3s ease-in-out infinite;
 }
+@keyframes sndfade{0%,100%{opacity:.55}50%{opacity:1}}
 .snd.hide{display:none}
 
 /* above the gong card (z 60) so the confetti actually reads */
@@ -209,42 +292,86 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 #confetti.on{display:block}
 
 /* ========================= VIEW TABS ========================= */
-.tabs{display:flex; gap:6px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:4px}
+.tabs{
+  display:flex; gap:6px; background:rgba(0,0,0,.34); border:1px solid var(--line-2);
+  border-radius:999px; padding:4px; box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
+}
 .tab{
   font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
-  color:var(--g1); background:transparent; border:none; padding:9px 18px; border-radius:999px; cursor:pointer;
+  color:var(--g2); background:transparent; border:none; padding:9px 18px; border-radius:999px; cursor:pointer;
+  transition:color .18s ease, background .18s ease;
 }
-.tab.active{background:var(--purple); color:var(--white)}
+.tab:hover{color:var(--white)}
+.tab.active{background:var(--purple); color:var(--white); box-shadow:0 4px 18px var(--glow-purple)}
 main[hidden]{display:none !important}
 #view-fame{overflow-y:auto; overflow-x:hidden}
-#view-fame::-webkit-scrollbar{width:9px}
-#view-fame::-webkit-scrollbar-thumb{background:rgba(150,71,255,.5); border-radius:9px}
+#view-fame::-webkit-scrollbar{width:10px}
+#view-fame::-webkit-scrollbar-track{background:rgba(0,0,0,.22)}
+#view-fame::-webkit-scrollbar-thumb{background:rgba(150,71,255,.45); border-radius:9px; border:2px solid transparent; background-clip:padding-box}
+#view-fame::-webkit-scrollbar-thumb:hover{background:rgba(150,71,255,.75); background-clip:padding-box}
 
 .sec-head{display:flex; align-items:baseline; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s2)}
-.sec-head h2{font-size:17px; letter-spacing:.12em}
+.sec-head h2{
+  font-size:17px; letter-spacing:.12em; position:relative; padding-left:16px;
+}
+.sec-head h2::before{
+  content:''; position:absolute; left:0; top:.16em; bottom:.16em; width:4px;
+  border-radius:999px; background:var(--purple); box-shadow:0 0 12px var(--glow-purple);
+}
 .sec-head .note{font-size:12px; color:var(--g2)}
-.seg{display:flex; gap:4px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:3px; margin-left:auto}
+.seg{
+  display:flex; gap:4px; background:rgba(0,0,0,.3); border:1px solid var(--line-2);
+  border-radius:999px; padding:3px; margin-left:auto; box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+}
 .seg button{
   font-family:inherit; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
-  color:var(--g1); background:transparent; border:none; padding:7px 14px; border-radius:999px; cursor:pointer;
+  color:var(--g2); background:transparent; border:none; padding:7px 14px; border-radius:999px; cursor:pointer;
+  transition:color .18s ease, background .18s ease;
 }
-.seg button.active{background:var(--purple); color:var(--white)}
+.seg button:hover{color:var(--white)}
+.seg button.active{background:var(--purple); color:var(--white); box-shadow:0 3px 14px var(--glow-purple)}
 
 /* ========================= LEADERBOARD ========================= */
 .lb{display:flex; flex-direction:column; gap:10px}
 .lb-row{
+  position:relative; overflow:hidden;
   display:grid; grid-template-columns:56px 1.5fr 1fr 1fr 1fr 1fr; align-items:center; gap:var(--s2);
-  padding:16px 20px; border-radius:14px;
-  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10);
+  padding:16px 20px; border-radius:16px;
+  background:var(--surface-1); border:1px solid var(--line-1);
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 10px 26px rgba(0,0,0,.22);
+  transition:transform .2s cubic-bezier(.16,.84,.28,1), border-color .2s ease, background .2s ease;
 }
-.lb-row.r1{background:rgba(150,71,255,.16); border-color:rgba(150,71,255,.5)}
-.lb-row.r2{background:rgba(255,255,255,.075)}
-.lb-row.r3{background:rgba(255,255,255,.06)}
-.lb-row .medal{font-size:26px; font-weight:800; text-align:center; letter-spacing:-.02em; color:var(--g3)}
-.lb-row.r1 .medal{color:var(--purple)} .lb-row.r2 .medal{color:var(--g1)} .lb-row.r3 .medal{color:var(--cherry)}
-.lb-row .who{display:flex; align-items:center; gap:12px}
-.lb-row .who .nm{font-size:19px; font-weight:800; text-transform:uppercase; letter-spacing:.02em}
-.lb-row .who .tp{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; padding:3px 8px; border-radius:999px; background:rgba(255,255,255,.14); color:var(--g1)}
+.lb-row::after{                                /* top edge catch-light */
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
+}
+.lb-row:hover{transform:translateX(3px); border-color:var(--line-2)}
+.lb-row.r1{
+  background:linear-gradient(100deg, rgba(150,71,255,.22), rgba(150,71,255,.07) 62%);
+  border-color:rgba(150,71,255,.55);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 16px 42px rgba(150,71,255,.20);
+}
+.lb-row.r1::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent)}
+.lb-row.r2{background:var(--surface-2); border-color:rgba(255,255,255,.12)}
+.lb-row.r3{background:rgba(205,40,115,.07); border-color:rgba(205,40,115,.24)}
+.lb-row .medal{font-size:30px; font-weight:800; text-align:center; letter-spacing:-.04em; color:var(--g4)}
+.lb-row.r1 .medal{color:var(--purple); text-shadow:0 0 22px var(--glow-purple)}
+.lb-row.r2 .medal{color:var(--g1)} .lb-row.r3 .medal{color:var(--cherry)}
+.lb-row .who{display:flex; align-items:center; gap:12px; min-width:0}
+.lb-row .who .fav{
+  flex:0 0 auto; width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; letter-spacing:.02em;
+  background:var(--surface-2); color:var(--g1); border:1px solid var(--line-1);
+}
+.lb-row.r1 .who .fav{background:var(--purple); color:#fff; border-color:transparent; box-shadow:0 0 20px var(--glow-purple)}
+.lb-row.r3 .who .fav{border-color:rgba(205,40,115,.40); color:var(--white)}
+.lb-row .who .nm{font-size:19px; font-weight:800; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lb-row .who .tp{
+  flex:0 0 auto; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  padding:3px 8px; border-radius:999px; background:rgba(255,255,255,.10);
+  border:1px solid var(--line-1); color:var(--g2);
+}
 .cell .l{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g2)}
 .cell .v{font-size:20px; font-weight:800; letter-spacing:-.01em; margin-top:3px}
 .cell .v.pu{color:var(--purple)} .cell .v.ok{color:var(--ok)} .cell .v.md{color:#FFC53D}
@@ -258,9 +385,18 @@ main[hidden]{display:none !important}
 .badges{display:grid; grid-template-columns:repeat(auto-fill,minmax(292px,1fr)); gap:var(--s2)}
 .bg{
   position:relative; overflow:hidden; border-radius:18px; padding:22px 24px 20px;
-  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+  background:var(--surface-1); border:1px solid var(--line-1);
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 14px 34px rgba(0,0,0,.24);
 }
-.bg.won{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.40)}
+.bg::after{
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+}
+.bg.won{
+  background:linear-gradient(160deg, rgba(150,71,255,.18), rgba(150,71,255,.06));
+  border-color:rgba(150,71,255,.42);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 18px 46px rgba(150,71,255,.16);
+}
 .bg .medal-shape{position:absolute; right:-22px; top:-22px; opacity:.13; pointer-events:none}
 .bg .bt{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--white)}
 .bg .bd{font-size:11px; color:var(--g2); margin-top:4px; line-height:1.4; min-height:31px}
@@ -285,13 +421,37 @@ main[hidden]{display:none !important}
 /* ===================== REAL TROPHIES ===================== */
 .trophies{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:var(--s2)}
 .tr{
-  position:relative; border-radius:18px; padding:24px 22px 20px; text-align:center;
-  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+  position:relative; overflow:hidden; border-radius:18px; padding:24px 22px 20px; text-align:center;
+  background:var(--surface-1); border:1px solid var(--line-1);
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 14px 34px rgba(0,0,0,.24);
+  transition:transform .22s cubic-bezier(.16,.84,.28,1), box-shadow .22s ease;
 }
-.tr.held{background:rgba(150,71,255,.13); border-color:rgba(150,71,255,.42)}
-.tr.held.elite{background:rgba(205,40,115,.13); border-color:rgba(205,40,115,.45)}
-.tr .cup{height:104px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:14px}
-.tr .cup svg{filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+.tr::after{
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
+}
+.tr:hover{transform:translateY(-3px)}
+.tr.held{
+  background:linear-gradient(180deg, rgba(150,71,255,.19), rgba(150,71,255,.05) 70%);
+  border-color:rgba(150,71,255,.45);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 18px 48px rgba(150,71,255,.18);
+}
+.tr.held::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent)}
+.tr.held.elite{
+  background:linear-gradient(180deg, rgba(205,40,115,.19), rgba(205,40,115,.05) 70%);
+  border-color:rgba(205,40,115,.48);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 18px 48px rgba(205,40,115,.18);
+}
+.tr .cup{position:relative; height:104px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:14px}
+.tr.held .cup::before{                          /* spotlight pool under a held trophy */
+  content:''; position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
+  width:132px; height:34px; border-radius:50%;
+  background:radial-gradient(closest-side, var(--glow-purple), transparent 78%);
+  filter:blur(2px);
+}
+.tr.held.elite .cup::before{background:radial-gradient(closest-side, rgba(205,40,115,.34), transparent 78%)}
+.tr .cup svg{position:relative; filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+.tr:not(.held) .cup svg{opacity:.62}
 .tr .tn{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.08em}
 .tr .td{font-size:11px; color:var(--g2); margin-top:5px; line-height:1.4; min-height:30px}
 .tr .tv{font-size:30px; font-weight:800; letter-spacing:-.02em; margin:12px 0 4px; color:var(--purple)}
@@ -305,56 +465,102 @@ main[hidden]{display:none !important}
   padding:4px 9px; border-radius:999px; background:var(--purple); color:var(--white);
 }
 .ribbon.elite{background:var(--cherry)}
-.ribbon.open{background:rgba(255,255,255,.14); color:var(--g1)}
+.ribbon:not(.open){box-shadow:0 4px 16px var(--glow-purple)}
+.ribbon.elite:not(.open){box-shadow:0 4px 16px rgba(205,40,115,.38)}
+.ribbon.open{background:rgba(255,255,255,.09); border:1px solid var(--line-1); color:var(--g2); box-shadow:none}
 
 /* ===================== ACHIEVEMENTS ===================== */
 .who-pick{display:flex; gap:6px; flex-wrap:wrap; margin-left:auto}
 .chip{
   font-family:inherit; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
-  color:var(--g1); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+  color:var(--g2); background:var(--surface-2); border:1px solid var(--line-1);
   padding:8px 14px; border-radius:999px; cursor:pointer;
+  transition:color .18s ease, background .18s ease, border-color .18s ease;
 }
 .chip:hover{border-color:var(--purple); color:var(--white)}
-.chip.active{background:var(--purple); border-color:var(--purple); color:var(--white)}
+.chip.active{background:var(--purple); border-color:var(--purple); color:var(--white); box-shadow:0 4px 16px var(--glow-purple)}
 
 .ach-summary{
+  position:relative; overflow:hidden;
   display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
-  background:rgba(150,71,255,.10); border:1px solid rgba(150,71,255,.30);
-  border-radius:14px; padding:16px 20px; margin-bottom:var(--s2);
+  background:linear-gradient(100deg, rgba(150,71,255,.16), rgba(150,71,255,.05) 70%);
+  border:1px solid rgba(150,71,255,.32);
+  border-radius:16px; padding:18px 22px; margin-bottom:var(--s2);
+  box-shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 14px 40px rgba(150,71,255,.13);
+}
+.ach-summary::after{
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent);
 }
 .ach-summary .big{font-size:34px; font-weight:800; letter-spacing:-.02em; color:var(--purple)}
 .ach-summary .big i{font-style:normal; font-size:16px; color:var(--g2)}
 .ach-summary .lbl{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--g1)}
-.ach-summary .track{flex:1; min-width:180px; height:10px; border-radius:6px; background:rgba(255,255,255,.13); overflow:hidden}
-.ach-summary .track>div{height:100%; border-radius:6px; background:var(--purple); transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.ach-summary .track{
+  flex:1; min-width:180px; height:11px; border-radius:999px; overflow:hidden;
+  background:rgba(0,0,0,.34); box-shadow:0 1px 2px rgba(0,0,0,.4) inset, 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.ach-summary .track>div{
+  height:100%; border-radius:999px; background:linear-gradient(90deg,var(--purple-dark),var(--purple));
+  box-shadow:0 0 18px var(--glow-purple); transition:width .9s cubic-bezier(.16,.84,.28,1);
+}
 
 .achs{display:grid; grid-template-columns:repeat(auto-fill,minmax(214px,1fr)); gap:14px}
 .ach{
-  position:relative; border-radius:16px; padding:18px 16px 16px; text-align:center;
-  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10);
+  position:relative; overflow:hidden; border-radius:16px; padding:18px 16px 16px; text-align:center;
+  background:var(--surface-1); border:1px solid var(--line-1);
+  transition:transform .22s cubic-bezier(.16,.84,.28,1), box-shadow .22s ease, opacity .22s ease;
 }
-.ach.on{background:rgba(150,71,255,.14); border-color:rgba(150,71,255,.45)}
-.ach.on.elite{background:rgba(205,40,115,.14); border-color:rgba(205,40,115,.45)}
-.ach.off{opacity:.62}
+.ach:hover{transform:translateY(-3px)}
+.ach.on{
+  background:linear-gradient(180deg, rgba(150,71,255,.20), rgba(150,71,255,.05) 72%);
+  border-color:rgba(150,71,255,.48);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 16px 40px rgba(150,71,255,.17);
+}
+.ach.on::after{                                 /* unlocked tiles get a catch-light */
+  content:''; position:absolute; inset:0 0 auto 0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);
+}
+.ach.on.elite{
+  background:linear-gradient(180deg, rgba(205,40,115,.20), rgba(205,40,115,.05) 72%);
+  border-color:rgba(205,40,115,.48);
+  box-shadow:0 1px 0 rgba(255,255,255,.09) inset, 0 16px 40px rgba(205,40,115,.17);
+}
+.ach.on .medal-cup svg{filter:drop-shadow(0 6px 16px rgba(150,71,255,.45))}
+.ach.on.elite .medal-cup svg{filter:drop-shadow(0 6px 16px rgba(205,40,115,.45))}
+/* Locked: dimmed and dashed, so the cabinet reads as "still to win" at a glance */
+.ach.off{
+  opacity:.62; border-style:dashed; border-color:rgba(255,255,255,.14);
+  background:rgba(255,255,255,.022);
+}
+.ach.off:hover{opacity:1}
+.ach.off .medal-cup svg{filter:grayscale(1)}
 .ach .medal-cup{height:74px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:10px; position:relative}
 .ach .lock{
   position:absolute; right:calc(50% - 40px); bottom:2px;
   width:24px; height:24px; border-radius:50%;
-  background:var(--charcoal); border:1px solid rgba(255,255,255,.22);
+  background:var(--ground); border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 3px 10px rgba(0,0,0,.45);
   display:flex; align-items:center; justify-content:center;
 }
 .ach .lock svg{width:11px; height:11px}
 .ach .an{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; line-height:1.25}
 .ach .ad{font-size:10px; color:var(--g2); margin-top:5px; line-height:1.4; min-height:28px}
-.ach .prog{height:7px; border-radius:5px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:12px}
-.ach .prog>div{height:100%; border-radius:5px; background:var(--purple); transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.ach.on .prog>div{background:var(--ok)}
+.ach .prog{
+  height:8px; border-radius:999px; overflow:hidden; margin-top:12px;
+  background:rgba(0,0,0,.34); box-shadow:0 1px 2px rgba(0,0,0,.4) inset, 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.ach .prog>div{
+  height:100%; border-radius:999px; background:linear-gradient(90deg,var(--purple-dark),var(--purple));
+  transition:width .9s cubic-bezier(.16,.84,.28,1);
+}
+.ach.on .prog>div{background:var(--ok); box-shadow:0 0 14px rgba(47,208,122,.45)}
 .ach .pv{font-size:10px; font-weight:800; letter-spacing:.06em; margin-top:7px; color:var(--g1)}
 .ach.on .pv{color:var(--ok)}
 .ach .tierpill{
   position:absolute; top:10px; left:10px;
   font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
-  padding:3px 7px; border-radius:999px; background:rgba(255,255,255,.12); color:var(--g1);
+  padding:3px 7px; border-radius:999px; background:rgba(255,255,255,.09);
+  border:1px solid var(--line-1); color:var(--g2);
 }
 .ach.on .tierpill{background:var(--purple); color:var(--white)}
 .ach.on.elite .tierpill{background:var(--cherry)}
@@ -565,6 +771,7 @@ main[hidden]{display:none !important}
       <div><div class="l">Month Attainment</div><div class="v" id="g-m">—</div></div>
       <div><div class="l">Quarter Attainment</div><div class="v" id="g-q">—</div></div>
     </div>
+    <div class="dismiss-hint">Click anywhere to clear</div>
   </div>
 </div>
 
@@ -578,6 +785,7 @@ main[hidden]{display:none !important}
     <div>This Month<b id="t-m">—</b></div>
     <div>This Quarter<b id="t-q">—</b></div>
   </div>
+  <div class="dismiss-hint">Click anywhere to clear</div>
 </div>
 
 <canvas id="confetti"></canvas>
@@ -786,14 +994,54 @@ function fetchTab(gid){
 function loadSeen(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||'[]')); }catch{ return new Set(); } }
 function saveSeen(k,set){ try{ localStorage.setItem(k,JSON.stringify([...set].slice(-4000))); }catch{} }
 
+// Google's published CSV intermittently serves only a header row while the
+// sheet's IMPORTRANGE formulas recalculate. Treat that as a failed read rather
+// than as "the team suddenly has no deals" — otherwise the wall blanks out.
+function looksValid(rows, requiredCol){
+  return Array.isArray(rows) && rows.length > 0 && rows[0] &&
+         Object.prototype.hasOwnProperty.call(rows[0], requiredCol);
+}
+// A recalculating sheet can also serve a *partial* result — 10 rows where 148
+// belong — which passes the header check above. Row counts only grow inside a
+// period, so a sudden collapse is a bad read, not news. Reject the first one;
+// accept it if the same smaller size comes back, which is how a genuine drop
+// (a new quarter, a re-scoped QUERY) gets through within one retry.
+const lastGoodSize={}, shrinkStrike={};
+function plausible(key, n){
+  const prev = lastGoodSize[key] || 0;
+  if(prev > 20 && n < prev * 0.6){
+    shrinkStrike[key] = (shrinkStrike[key]||0) + 1;
+    if(shrinkStrike[key] < 2) return false;
+  }
+  shrinkStrike[key] = 0;
+  return true;
+}
+let staleTimer=null;
+function markStale(msg){
+  $('dot').classList.add('off');
+  $('live-txt').textContent = msg;
+  // Retry sooner than the normal cycle — these blips clear in seconds.
+  clearTimeout(staleTimer);
+  staleTimer = setTimeout(poll, 8000);
+}
 async function poll(){
   try{
     const [qwon,sp,inb]=await Promise.all([
       fetchTab(CONFIG.GIDS.qwon), fetchTab(CONFIG.GIDS.sp), fetchTab(CONFIG.GIDS.inbound),
     ]);
+    if(!(looksValid(qwon,'Opportunity Owner') && looksValid(sp,'Created By') && looksValid(inb,'Opportunity ID'))){
+      markStale(state.won.length ? 'Refreshing' : 'Loading');
+      return;                       // keep whatever good data we already have
+    }
+    if(!(plausible('qwon',qwon.length) && plausible('sp',sp.length) && plausible('inb',inb.length))){
+      markStale('Refreshing');
+      return;
+    }
+    lastGoodSize.qwon=qwon.length; lastGoodSize.sp=sp.length; lastGoodSize.inb=inb.length;
     state.won = qwon.filter(r=>isTeam(r['Opportunity Owner']) && !isPolicyCancelled(r));
     state.sp  = sp.filter(r=>isTeam(r['Created By']));
     state.inboundIds = new Set(inb.map(r=>(r['Opportunity ID']||'').trim()).filter(Boolean));
+    clearTimeout(staleTimer);
     $('dot').classList.remove('off');
     $('live-txt').textContent='Live';
     $('sync').textContent='Synced '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -801,8 +1049,7 @@ async function poll(){
     render();
   }catch(e){
     console.error(e);
-    $('dot').classList.add('off');
-    $('live-txt').textContent = location.protocol==='file:' ? 'Blocked — run a local server' : 'Reconnecting';
+    markStale(location.protocol==='file:' ? 'Blocked — run a local server' : 'Reconnecting');
   }
 }
 
@@ -869,6 +1116,21 @@ function compute(){
 const tone=p=>p===null?'low':(p>=100?'win':(p>=70?'mid':'low'));
 
 /* -------- Self-prospected panel: counts, per-rep bars, 14-day shape -------- */
+/* Ease the hero numbers to their new value — jumping 0 -> 27.1 reads as a
+   glitch, a short count-up reads as the number landing. */
+function countUp(el, to, fmt){
+  const from = parseFloat(el.dataset.v || '0');
+  if(!isFinite(to)){ el.innerHTML = fmt(to); return; }
+  el.dataset.v = to;
+  if(Math.abs(to-from) < 0.05){ el.innerHTML = fmt(to); return; }
+  const t0 = performance.now(), dur = 700;
+  (function step(now){
+    const k = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-k,3);
+    el.innerHTML = fmt(from + (to-from)*e);
+    if(k<1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
 function renderSPPanel(m){
   const now=new Date(), t0=new Date(now); t0.setHours(0,0,0,0);
   const ws=weekStart(now);
@@ -909,7 +1171,7 @@ function render(){
   const m=compute(); state.metrics=m;
 
   $('m-label').textContent=`${m.mLabel} · Attainment`;
-  $('m-pct').innerHTML=(m.mPct===null?'—':fmtPct(m.mPct))+'<span class="sym">%</span>';
+  countUp($('m-pct'), m.mPct===null?NaN:m.mPct, v=>(isFinite(v)?fmtPct(v):'—')+'<span class="sym">%</span>');
   $('m-pct').className='pct '+tone(m.mPct);
   $('m-money').innerHTML=`${fmtSAR(m.mWon)} <i>of ${fmtSAR(m.mTgt)}</i>`;
   $('m-bar').style.width=Math.min(100,m.mPct||0)+'%';
@@ -917,7 +1179,7 @@ function render(){
   $('m-sub').textContent=`${m.mDeals} deal${m.mDeals===1?'':'s'} closed · ${fmtShort(Math.max(0,m.mTgt-m.mWon))} to go`;
 
   $('q-label').textContent=`${m.qLabel} · Attainment`;
-  $('q-pct').innerHTML=(m.qPct===null?'—':fmtPct(m.qPct))+'<span class="sym">%</span>';
+  countUp($('q-pct'), m.qPct===null?NaN:m.qPct, v=>(isFinite(v)?fmtPct(v):'—')+'<span class="sym">%</span>');
   $('q-pct').className='pct '+tone(m.qPct);
   $('q-money').innerHTML=`${fmtSAR(m.qWon)} <i>of ${fmtSAR(m.qTgt)}</i>`;
   $('q-bar').style.width=Math.min(100,m.qPct||0)+'%';
@@ -931,6 +1193,7 @@ function render(){
   $('rows').innerHTML = m.board.length ? m.board.map((r,i)=>`
     <div class="row ${i===0&&r.won>0?'top':''}">
       <div class="rk">${i+1}</div>
+      <div class="av">${esc(r.name.slice(0,2).toUpperCase())}</div>
       <div>
         <div class="nm">${esc(r.name)}</div>
         <div class="rb"><div style="width:${(r.won/max)*100}%"></div></div>
@@ -962,6 +1225,35 @@ function shake(){
   setTimeout(()=>el.classList.remove('shaking'),2200);
 }
 
+/* A celebration stays on screen until a human clears it — a deal that lands at
+   18:05 is still up the next morning. The listener arms a beat late so a click
+   already in flight (or the one that armed the audio) can't eat the popup, and
+   it swallows the dismissing click so it doesn't also press whatever sits
+   underneath. Escape works too, for a wall with a keyboard. */
+let dismissNow=null;
+function holdUntilClick(el, done){
+  const close=ev=>{
+    if(ev){
+      if(ev.type==='keydown' && ev.key!=='Escape') return;
+      if(ev.type!=='keydown'){ ev.preventDefault(); ev.stopPropagation(); }
+      armAudio();                 // the capture-phase stop means we must arm by hand
+    }
+    document.removeEventListener('click',close,true);
+    document.removeEventListener('touchstart',close,true);
+    document.removeEventListener('keydown',close,true);
+    dismissNow=null;
+    el.classList.remove('on');
+    done&&done();
+  };
+  dismissNow=close;
+  setTimeout(()=>{
+    if(dismissNow!==close) return;             // already cleared
+    document.addEventListener('click',close,true);
+    document.addEventListener('touchstart',close,true);
+    document.addEventListener('keydown',close,true);
+  }, 500);
+}
+
 function showGong(row,done){
   render(); // make sure the % behind the gong is current
   const m=state.metrics;
@@ -978,7 +1270,7 @@ function showGong(row,done){
   $('gong').classList.add('on');
   playGong(); shake(); burst(210);
   flashTitle('🔔 DEAL WON!');
-  setTimeout(()=>{ $('gong').classList.remove('on'); done&&done(); }, 9000);
+  holdUntilClick($('gong'), done);
 }
 function showSP(row,done){
   render();
@@ -990,7 +1282,7 @@ function showSP(row,done){
   $('sp-toast').classList.add('on');
   playRinger();
   flashTitle('🔔 New SP opp');
-  setTimeout(()=>{ $('sp-toast').classList.remove('on'); done&&done(); }, 7000);
+  holdUntilClick($('sp-toast'), done);
 }
 
 /* ============================================================
@@ -1069,7 +1361,10 @@ function renderLeaderboard(){
   $('lb').innerHTML = rows.length ? rows.map((r,i)=>`
     <div class="lb-row ${i<3?'r'+(i+1):''}">
       <div class="medal">${i<3?medals[i]:(i+1)}</div>
-      <div class="who"><span class="nm">${esc(r.name)}</span><span class="tp">${esc(r.type)}</span></div>
+      <div class="who">
+        <span class="fav">${esc(r.name.slice(0,2).toUpperCase())}</span>
+        <span class="nm">${esc(r.name)}</span><span class="tp">${esc(r.type)}</span>
+      </div>
       <div class="cell"><div class="l">Won</div><div class="v pu">${fmtShort(r.won)}</div></div>
       <div class="cell"><div class="l">Deals</div><div class="v">${r.deals}</div></div>
       <div class="cell"><div class="l">SP Opps</div><div class="v">${r.sp}</div></div>
@@ -1319,7 +1614,7 @@ document.addEventListener('keydown',e=>{
     state.queue.push({kind:'sp',row:r}); drain();
   }
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $('gong').classList.remove('on'); $('sp-toast').classList.remove('on'); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && dismissNow) dismissNow(e); });
 
 /* view tabs */
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
