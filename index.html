@@ -87,7 +87,7 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 .shape{position:absolute; right:-16px; bottom:-18px; opacity:.10; pointer-events:none}
 
 /* ======================= SP + LEADERBOARD ======================= */
-.grid{display:grid; grid-template-columns:1fr 1fr 1.5fr; gap:var(--s3); flex:1; min-height:0}
+.grid{display:grid; grid-template-columns:1.45fr 1fr; gap:var(--s3); flex:1; min-height:0}
 .sp{display:flex; flex-direction:column; justify-content:center}
 .sp .count{font-size:76px; font-weight:800; line-height:.9; letter-spacing:-.02em; color:var(--purple)}
 .sp.alt .count{color:var(--cherry)}          /* Cherry = highlight, on charcoal only */
@@ -195,23 +195,14 @@ main{flex:1; min-height:0; padding:var(--s4) var(--s5) var(--s3); display:flex; 
 #sp-toast .c div{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:var(--g1)}
 #sp-toast .c b{display:block; font-size:24px; letter-spacing:-.01em; color:var(--white); margin-top:4px}
 
-/* =========================== ARM GATE =========================== */
-#arm{
-  position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.94); text-align:center; padding:var(--s5);
+/* subtle sound hint — replaces the old full-screen arm gate */
+.snd{
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em;
+  color:var(--g1); background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:6px 12px;
 }
-#arm.off{display:none}
-#arm .box{max-width:660px}
-#arm h1{font-size:62px; line-height:.96; letter-spacing:-.02em; margin:var(--s3) 0 var(--s2)}
-#arm h1 em{font-style:normal; color:var(--purple)}
-#arm p{font-size:17px; color:var(--g1); line-height:1.55; margin-bottom:var(--s5)}
-#arm button{
-  font-family:inherit; font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.14em;
-  color:var(--white); background:var(--purple); border:none; border-radius:12px;
-  padding:20px 46px; cursor:pointer;
-}
-#arm button:hover{background:#7A2EE6}
-#arm .fine{margin-top:var(--s3); font-size:12px; color:var(--g3)}
+.snd.hide{display:none}
 
 /* above the gong card (z 60) so the confetti actually reads */
 #confetti{position:fixed; inset:0; z-index:62; pointer-events:none; display:none}
@@ -420,14 +411,13 @@ main[hidden]{display:none !important}
       <span class="title">KSA <b>Win Wall</b></span>
     </div>
     <div class="live"><span class="dot" id="dot"></span><span id="live-txt">Live</span></div>
+    <span class="snd" id="snd">Click anywhere to enable sound</span>
     <div class="tabs">
       <button class="tab active" data-view="wall">Win Wall</button>
       <button class="tab" data-view="fame">Hall of Fame</button>
     </div>
     <div class="spacer"></div>
     <span class="sync" id="sync">—</span>
-    <button class="tbtn" id="test-gong">Test Gong</button>
-    <button class="tbtn" id="test-sp">Test Ringer</button>
     <button class="tbtn primary" id="refresh">Refresh</button>
   </nav>
 
@@ -592,19 +582,6 @@ main[hidden]{display:none !important}
 
 <canvas id="confetti"></canvas>
 
-<!-- ===================== ARM GATE ===================== -->
-<div id="arm">
-  <div class="box">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63.943 86.528" width="40" fill="#9647FF" aria-hidden="true">
-      <path d="M 26.945 15.042 C 33.732 15.042 38.904 20.171 38.904 26.486 C 38.904 32.794 33.732 38.283 26.945 38.283 L 15.395 38.283 L 15.395 15.049 L 26.945 15.049 Z M 48.555 71.351 L 15.395 71.344 L 15.388 52.909 L 48.548 52.887 L 48.548 71.351 Z M 63.943 86.528 L 63.936 38.381 L 51.512 38.381 C 53.72 35.03 54.976 31.037 54.976 26.479 C 54.976 11.684 42.029 0 26.112 0 L 0 0 L 0 86.528 Z"/>
-    </svg>
-    <h1>Ring the <em>gong</em>.</h1>
-    <p>Leave this open. Every deal your team locks in hits the gong — loud. Every self-prospected opp rings the bell. Your browser needs one tap before it's allowed to make noise.</p>
-    <button id="arm-btn">Arm the gong</button>
-    <div class="fine">Sound is synthesised in-browser — nothing to download.</div>
-  </div>
-</div>
-
 <script>
 /* ============================================================
    CONFIG
@@ -622,7 +599,6 @@ const TEAM = [
   { name:'Moath Aladwan',         short:'Moath',    type:'Junior', defaultMonthlyTarget:60000,  monthlyTargets:{} },
   { name:'Muneerah Alobaidallah', short:'Muneerah', type:'Junior', defaultMonthlyTarget:70000,  monthlyTargets:{} },
   { name:'Islam Mohsen',          short:'Islam',    type:'Senior', defaultMonthlyTarget:100000, monthlyTargets:{} },
-  { name:'Alanoud Alobaidallah',  short:'Alanoud',  type:'Senior', defaultMonthlyTarget:100000, monthlyTargets:{}, endDate:'2026-06-30' },
   { name:'Mohammad Bibars',       short:'Bibars',   type:'Senior', defaultMonthlyTarget:80000,  startDate:'2026-07-01', monthlyTargets:{'2026-07':40000,'2026-08':60000} },
   { name:'Yousuf Mahmoud',        short:'Yousuf',   type:'Senior', defaultMonthlyTarget:100000, startDate:'2026-07-01', monthlyTargets:{'2026-07':33333.33,'2026-08':75000} },
   // TODO: replace with full names once confirmed — must match Salesforce owner exactly
@@ -1310,24 +1286,38 @@ function renderFame(){ renderLeaderboard(); renderBadges(); renderAchievements()
 /* ============================================================
    WIRE UP
    ============================================================ */
-$('arm-btn').addEventListener('click',()=>{
-  armed=true; initAudio();
-  // unlock the audio graph inside the user gesture
+// Audio can't play until the visitor interacts with the page — browser rule.
+// So we arm silently on their first click/keypress/tap instead of gating the
+// whole screen behind a button.
+function armAudio(){
+  if(armed) return;
+  armed=true;
   const ctx=initAudio(); if(ctx.state==='suspended') ctx.resume();
   const o=ctx.createOscillator(), g=ctx.createGain();
-  g.gain.value=0.0001; o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.02);
-  $('arm').classList.add('off');
-  poll();
-  setInterval(poll, CONFIG.POLL_SECONDS*1000);
-});
+  g.gain.value=0.0001; o.connect(g); g.connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime+0.02);
+  $('snd').classList.add('hide');
+}
+['click','keydown','touchstart'].forEach(ev=>
+  document.addEventListener(ev, armAudio, { once:false, passive:true }));
+
+// Data starts flowing immediately — no gate.
+poll();
+setInterval(poll, CONFIG.POLL_SECONDS*1000);
+
 $('refresh').addEventListener('click',poll);
-$('test-gong').addEventListener('click',()=>{
-  const r=state.won.slice(-1)[0]||{'Opportunity Name':'Test Company — Platform 2026','Projected Revenue':'96,000.00','Platform Lives':'240','Opportunity Owner':'Islam Mohsen'};
-  state.queue.push({kind:'won',row:r}); drain();
-});
-$('test-sp').addEventListener('click',()=>{
-  const r=state.sp.slice(-1)[0]||{'Opportunity Name':'Test Prospect — Platform 2026','Created By':'Moath Aladwan','Lead Source':'Commercial Team Outbound','Platform Lives':'120'};
-  state.queue.push({kind:'sp',row:r}); drain();
+
+// Hidden demo triggers for run-throughs: press G for the gong, R for the ringer.
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea')) return;
+  if(e.key==='g'||e.key==='G'){
+    const r=state.won.slice(-1)[0]||{'Opportunity Name':'Test Company — Platform 2026','Projected Revenue':'96,000.00','Platform Lives':'240','Opportunity Owner':'Islam Mohsen'};
+    state.queue.push({kind:'won',row:r}); drain();
+  }
+  if(e.key==='r'||e.key==='R'){
+    const r=state.sp.slice(-1)[0]||{'Opportunity Name':'Test Prospect — Platform 2026','Created By':'Moath Aladwan','Lead Source':'Commercial Team Outbound','Platform Lives':'120'};
+    state.queue.push({kind:'sp',row:r}); drain();
+  }
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $('gong').classList.remove('on'); $('sp-toast').classList.remove('on'); } });
 
