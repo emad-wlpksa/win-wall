@@ -417,6 +417,8 @@ main[hidden]{display:none !important}
 .rec .rw{display:block; font-size:10px; font-weight:400; color:var(--g3)}
 
 .fame-sec{margin-bottom:var(--s5)}
+/* Parked sections ship hidden and are revealed by SHOW_TROPHIES — see renderFame(). */
+.fame-sec[hidden]{display:none !important}
 
 /* ===================== REAL TROPHIES ===================== */
 .trophies{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:var(--s2)}
@@ -703,7 +705,10 @@ main[hidden]{display:none !important}
       <div class="lb" id="lb"></div>
     </section>
 
-    <section class="fame-sec">
+    <!-- PARKED: trophy cabinet, achievements and record boards are hidden until we
+         design proper trophies and milestones. Flip SHOW_TROPHIES to true to
+         bring all three back — nothing else needs changing. -->
+    <section class="fame-sec parked" hidden>
       <div class="sec-head">
         <h2>The Trophy Cabinet</h2>
         <span class="note" id="bg-note">Records held right now — take one off someone.</span>
@@ -717,7 +722,7 @@ main[hidden]{display:none !important}
       <div class="trophies" id="trophies"></div>
     </section>
 
-    <section class="fame-sec">
+    <section class="fame-sec parked" hidden>
       <div class="sec-head">
         <h2>Achievements</h2>
         <span class="note">Unlock them once — they're yours. Locked ones show how close you are.</span>
@@ -734,7 +739,7 @@ main[hidden]{display:none !important}
       <div class="achs" id="achs"></div>
     </section>
 
-    <section class="fame-sec">
+    <section class="fame-sec parked" hidden>
       <div class="sec-head">
         <h2>All-Time Record Boards</h2>
         <span class="note">Best single day, week, month, quarter and year anyone has posted.</span>
@@ -800,6 +805,12 @@ const CONFIG = {
   POLL_SECONDS: 45,   // how often we re-check the sheet
   FRESH_DAYS: 30,     // only celebrate deals/opps dated within this window
 };
+
+/* The trophy cabinet, achievements and all-time record boards are parked while
+   we design proper trophies and milestones. The sections ship `hidden` in the
+   markup so there's no flash of content; set this to true to unhide and render
+   all three again. Their code is untouched underneath. */
+const SHOW_TROPHIES = false;
 
 /* H2 2026 target schedule — per rep, per month.
    defaultMonthlyTarget + monthlyTargets overrides + startDate / endDate. */
@@ -1575,7 +1586,12 @@ function renderAchievements(){
 }
 const a_fmt=i=>`${i.f(i.v)} / ${i.f(i.goal)}`;
 
-function renderFame(){ renderLeaderboard(); renderBadges(); renderAchievements(); }
+function renderFame(){
+  renderLeaderboard();
+  if(!SHOW_TROPHIES) return;   // nothing below the leadership board is on screen
+  renderBadges();
+  renderAchievements();
+}
 
 /* ============================================================
    WIRE UP
@@ -1623,6 +1639,7 @@ document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>
   $('view-fame').hidden = v!=='fame';
 }));
 /* leaderboard period */
+if(SHOW_TROPHIES) document.querySelectorAll('.fame-sec.parked').forEach(sec=>{ sec.hidden=false; });
 document.querySelectorAll('#lb-seg button').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('#lb-seg button').forEach(b=>b.classList.toggle('active',b===btn));
   state.lbPeriod=btn.dataset.p;
